@@ -14,7 +14,217 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      content_packs: {
+        Row: {
+          created_at: string
+          creator_id: string
+          description: string | null
+          game_type: Database["public"]["Enums"]["game_type"]
+          id: string
+          is_published: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          game_type: Database["public"]["Enums"]["game_type"]
+          id?: string
+          is_published?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          game_type?: Database["public"]["Enums"]["game_type"]
+          id?: string
+          is_published?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      players: {
+        Row: {
+          avatar_color: string | null
+          created_at: string
+          id: string
+          is_ready: boolean | null
+          last_seen: string | null
+          nickname: string
+          room_id: string
+          score: number | null
+        }
+        Insert: {
+          avatar_color?: string | null
+          created_at?: string
+          id?: string
+          is_ready?: boolean | null
+          last_seen?: string | null
+          nickname: string
+          room_id: string
+          score?: number | null
+        }
+        Update: {
+          avatar_color?: string | null
+          created_at?: string
+          id?: string
+          is_ready?: boolean | null
+          last_seen?: string | null
+          nickname?: string
+          room_id?: string
+          score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          code: string
+          created_at: string
+          current_game_type: Database["public"]["Enums"]["game_type"] | null
+          current_pack_id: string | null
+          current_slide_index: number | null
+          host_id: string
+          id: string
+          settings: Json | null
+          status: Database["public"]["Enums"]["room_status"]
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          current_game_type?: Database["public"]["Enums"]["game_type"] | null
+          current_pack_id?: string | null
+          current_slide_index?: number | null
+          host_id: string
+          id?: string
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["room_status"]
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          current_game_type?: Database["public"]["Enums"]["game_type"] | null
+          current_pack_id?: string | null
+          current_slide_index?: number | null
+          host_id?: string
+          id?: string
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["room_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_current_pack_fk"
+            columns: ["current_pack_id"]
+            isOneToOne: false
+            referencedRelation: "content_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      slides: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          order_index: number
+          pack_id: string
+          points_possible: number | null
+          time_limit: number | null
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          order_index?: number
+          pack_id: string
+          points_possible?: number | null
+          time_limit?: number | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          order_index?: number
+          pack_id?: string
+          points_possible?: number | null
+          time_limit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slides_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "content_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submissions: {
+        Row: {
+          answer_data: Json | null
+          id: string
+          player_id: string
+          points_awarded: number | null
+          room_id: string
+          slide_id: string
+          submitted_at: string
+        }
+        Insert: {
+          answer_data?: Json | null
+          id?: string
+          player_id: string
+          points_awarded?: number | null
+          room_id: string
+          slide_id: string
+          submitted_at?: string
+        }
+        Update: {
+          answer_data?: Json | null
+          id?: string
+          player_id?: string
+          points_awarded?: number | null
+          room_id?: string
+          slide_id?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_slide_id_fkey"
+            columns: ["slide_id"]
+            isOneToOne: false
+            referencedRelation: "slides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +233,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      game_type:
+        | "trivia"
+        | "open-ended"
+        | "drawing"
+        | "truth-or-dare"
+        | "improvisation"
+      room_status: "lobby" | "playing" | "ended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +366,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      game_type: [
+        "trivia",
+        "open-ended",
+        "drawing",
+        "truth-or-dare",
+        "improvisation",
+      ],
+      room_status: ["lobby", "playing", "ended"],
+    },
   },
 } as const
