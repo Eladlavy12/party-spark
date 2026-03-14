@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import HostLobby from "./pages/HostLobby.tsx";
 import PlayerJoin from "./pages/PlayerJoin.tsx";
+import Studio from "./pages/Studio.tsx";
+import PackEditor from "./pages/PackEditor.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -20,6 +22,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/host/:code" element={<HostLobby />} />
           <Route path="/play/:code" element={<PlayerJoin />} />
+          <Route path="/studio" element={<Studio />} />
+          <Route path="/studio/:packId" element={<PackEditor />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
