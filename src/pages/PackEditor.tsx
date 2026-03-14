@@ -109,7 +109,7 @@ export default function PackEditor() {
     };
     const { data } = await supabase
       .from('slides')
-      .insert(insertData)
+      .insert([insertData])
       .select()
       .single();
     if (data) {
