@@ -134,9 +134,22 @@ const Index = () => {
             </div>
           </motion.div>
         </div>
+
+        {/* Studio link */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-8"
+        >
+          <Button variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => navigate('/studio')}>
+            <Sparkles className="w-4 h-4 mr-2" /> Content Studio
+          </Button>
+        </motion.div>
       </motion.div>
     </div>
   );
 };
+
 
 export default Index;
