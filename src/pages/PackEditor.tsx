@@ -100,9 +100,16 @@ export default function PackEditor() {
     if (!packId) return;
     const newIndex = slides.length;
     const content = getDefaultContent('information');
+    const insertData: { pack_id: string; order_index: number; content: Record<string, unknown>; time_limit: number; points_possible: number } = {
+      pack_id: packId,
+      order_index: newIndex,
+      content: content as unknown as Record<string, unknown>,
+      time_limit: 30,
+      points_possible: 100,
+    };
     const { data } = await supabase
       .from('slides')
-      .insert({ pack_id: packId, order_index: newIndex, content: content as unknown as Record<string, unknown>, time_limit: 30, points_possible: 100 })
+      .insert(insertData)
       .select()
       .single();
     if (data) {
