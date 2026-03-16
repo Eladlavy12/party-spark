@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import HostLobby from "./pages/HostLobby.tsx";
+import HostGame from "./pages/HostGame.tsx";
 import PlayerJoin from "./pages/PlayerJoin.tsx";
 import Studio from "./pages/Studio.tsx";
 import PackEditor from "./pages/PackEditor.tsx";
