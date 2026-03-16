@@ -30,8 +30,18 @@ const PlayerJoin = () => {
       avatar_color: getRandomColor(),
     });
     if (!error) {
+      // Get the player id from the inserted row
+      const { data: playerData } = await supabase
+        .from('players')
+        .select('id')
+        .eq('room_id', room.id)
+        .eq('nickname', nickname.trim())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
       setJoined(true);
       setPlayerName(nickname.trim());
+      if (playerData) setPlayerId(playerData.id);
     }
     setJoining(false);
   };
