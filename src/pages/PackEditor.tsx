@@ -368,6 +368,41 @@ export default function PackEditor() {
                   </div>
                 </div>
 
+                {/* Buzzer Settings */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <Bell className="w-3.5 h-3.5 text-muted-foreground" /> Buzzer
+                    </label>
+                    <Switch
+                      checked={slideContent.buzzerEnabled ?? false}
+                      onCheckedChange={(v) => updateSlideContent(selectedSlide.id, { buzzerEnabled: v })}
+                    />
+                  </div>
+                  {slideContent.buzzerEnabled && (
+                    <div>
+                      <label className="text-sm text-muted-foreground mb-1.5 block">Buzzer Mode</label>
+                      <Select
+                        value={slideContent.buzzerMode || 'first'}
+                        onValueChange={(v) => updateSlideContent(selectedSlide.id, { buzzerMode: v as 'first' | 'all' })}
+                      >
+                        <SelectTrigger className="bg-muted border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card border-border">
+                          <SelectItem value="first">First Buzz Wins</SelectItem>
+                          <SelectItem value="all">Everyone Can Buzz</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {(slideContent.buzzerMode || 'first') === 'first'
+                          ? 'Only the first player to buzz gets to answer'
+                          : 'All players can buzz — host sees order'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 {/* Delete slide */}
                 <div className="pt-4 border-t border-border">
                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteSlide(selectedSlide.id)}>
