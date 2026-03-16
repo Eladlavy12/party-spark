@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      buzzes: {
+        Row: {
+          buzzed_at: string
+          id: string
+          player_id: string
+          room_id: string
+          slide_index: number
+        }
+        Insert: {
+          buzzed_at?: string
+          id?: string
+          player_id: string
+          room_id: string
+          slide_index?: number
+        }
+        Update: {
+          buzzed_at?: string
+          id?: string
+          player_id?: string
+          room_id?: string
+          slide_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buzzes_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buzzes_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_packs: {
         Row: {
           created_at: string
