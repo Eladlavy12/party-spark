@@ -4,6 +4,7 @@ import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   ArrowLeft, Plus, Trash2, GripVertical, Save, Clock, Award,
   Info, MessageSquare, CheckSquare, Star, Pencil, Smartphone, Loader2,
+  Bell, BellOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
