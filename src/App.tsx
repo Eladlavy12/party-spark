@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import HostLobby from "./pages/HostLobby.tsx";
+import HostGame from "./pages/HostGame.tsx";
 import PlayerJoin from "./pages/PlayerJoin.tsx";
 import Studio from "./pages/Studio.tsx";
 import PackEditor from "./pages/PackEditor.tsx";
@@ -21,6 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/host/:code" element={<HostLobby />} />
+          <Route path="/host/:code/game" element={<HostGame />} />
           <Route path="/play/:code" element={<PlayerJoin />} />
           <Route path="/studio" element={<Studio />} />
           <Route path="/studio/:packId" element={<PackEditor />} />
