@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useRoom, usePlayers } from '@/hooks/use-realtime';
+import { useBuzzes } from '@/hooks/use-buzzer';
 import { motion } from 'framer-motion';
-import { Gamepad2, CheckCircle2 } from 'lucide-react';
+import { Gamepad2, CheckCircle2, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
