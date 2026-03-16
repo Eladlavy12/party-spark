@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useRoom, usePlayers } from '@/hooks/use-realtime';
+import { useBuzzes } from '@/hooks/use-buzzer';
 import { motion } from 'framer-motion';
-import { Gamepad2, CheckCircle2 } from 'lucide-react';
+import { Gamepad2, CheckCircle2, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +16,10 @@ const PlayerJoin = () => {
   const [nickname, setNickname] = useState('');
   const [joined, setJoined] = useState(false);
   const [playerName, setPlayerName] = useState('');
+  const [playerId, setPlayerId] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
+  const [buzzed, setBuzzed] = useState(false);
+  const { sendBuzz } = useBuzzes(room?.id ?? null, room?.current_slide_index ?? 0);
 
   const handleJoin = async () => {
     if (!room || !nickname.trim()) return;
@@ -26,8 +30,18 @@ const PlayerJoin = () => {
       avatar_color: getRandomColor(),
     });
     if (!error) {
+      // Get the player id from the inserted row
+      const { data: playerData } = await supabase
+        .from('players')
+        .select('id')
+        .eq('room_id', room.id)
+        .eq('nickname', nickname.trim())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
       setJoined(true);
       setPlayerName(nickname.trim());
+      if (playerData) setPlayerId(playerData.id);
     }
     setJoining(false);
   };
@@ -65,6 +79,27 @@ const PlayerJoin = () => {
           <h2 className="text-3xl font-bold text-foreground mb-2">You're in!</h2>
           <p className="text-muted-foreground mb-1">Playing as <span className="text-foreground font-bold">{playerName}</span></p>
           <p className="text-muted-foreground text-sm">Waiting for the host to start the game...</p>
+
+          {/* Buzzer Button */}
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={async () => {
+              if (!buzzed && playerId) {
+                await sendBuzz(playerId);
+                setBuzzed(true);
+              }
+            }}
+            disabled={buzzed}
+            className={`mt-6 w-32 h-32 rounded-full mx-auto flex flex-col items-center justify-center gap-1 shadow-lg transition-colors ${
+              buzzed
+                ? 'bg-muted text-muted-foreground cursor-default'
+                : 'bg-destructive text-destructive-foreground active:bg-destructive/80 cursor-pointer'
+            }`}
+          >
+            <Bell className="w-10 h-10" />
+            <span className="text-sm font-bold">{buzzed ? 'Buzzed!' : 'BUZZ!'}</span>
+          </motion.button>
+
           <div className="mt-8 gradient-card border border-border rounded-2xl p-4">
             <p className="text-sm text-muted-foreground mb-2">{players.length} player{players.length !== 1 ? 's' : ''} in lobby</p>
             <div className="flex flex-wrap gap-2 justify-center">

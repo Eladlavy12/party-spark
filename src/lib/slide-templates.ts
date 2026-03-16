@@ -47,6 +47,8 @@ export interface SlideContent {
   mediaUrl?: string;
   options?: string[]; // for multiple-choice
   correctOptionIndex?: number;
+  buzzerEnabled?: boolean;
+  buzzerMode?: 'first' | 'all'; // 'first' = first-buzz-wins, 'all' = everyone can buzz
 }
 
 export function getDefaultContent(template: SlideTemplate): SlideContent {
