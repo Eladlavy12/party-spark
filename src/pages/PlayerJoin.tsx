@@ -79,6 +79,27 @@ const PlayerJoin = () => {
           <h2 className="text-3xl font-bold text-foreground mb-2">You're in!</h2>
           <p className="text-muted-foreground mb-1">Playing as <span className="text-foreground font-bold">{playerName}</span></p>
           <p className="text-muted-foreground text-sm">Waiting for the host to start the game...</p>
+
+          {/* Buzzer Button */}
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={async () => {
+              if (!buzzed && playerId) {
+                await sendBuzz(playerId);
+                setBuzzed(true);
+              }
+            }}
+            disabled={buzzed}
+            className={`mt-6 w-32 h-32 rounded-full mx-auto flex flex-col items-center justify-center gap-1 shadow-lg transition-colors ${
+              buzzed
+                ? 'bg-muted text-muted-foreground cursor-default'
+                : 'bg-destructive text-destructive-foreground active:bg-destructive/80 cursor-pointer'
+            }`}
+          >
+            <Bell className="w-10 h-10" />
+            <span className="text-sm font-bold">{buzzed ? 'Buzzed!' : 'BUZZ!'}</span>
+          </motion.button>
+
           <div className="mt-8 gradient-card border border-border rounded-2xl p-4">
             <p className="text-sm text-muted-foreground mb-2">{players.length} player{players.length !== 1 ? 's' : ''} in lobby</p>
             <div className="flex flex-wrap gap-2 justify-center">

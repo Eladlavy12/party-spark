@@ -105,6 +105,54 @@ const HostLobby = () => {
           </div>
         </div>
 
+        {/* Buzzer panel */}
+        {buzzes.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-md"
+          >
+            <div className="gradient-card border border-border rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-foreground font-semibold flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-destructive" /> Buzzes
+                </h3>
+                <Button variant="ghost" size="sm" onClick={clearBuzzes} className="text-muted-foreground text-xs">
+                  <Trash2 className="w-3 h-3 mr-1" /> Clear
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {buzzes.map((buzz, i) => {
+                  const player = players.find((p) => p.id === buzz.player_id);
+                  return (
+                    <motion.div
+                      key={buzz.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="flex items-center gap-3 bg-muted/50 rounded-xl px-4 py-2"
+                    >
+                      <span className={`text-sm font-bold ${i === 0 ? 'text-accent' : 'text-muted-foreground'}`}>
+                        #{i + 1}
+                      </span>
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                        style={{ backgroundColor: player?.avatar_color ?? '#FF6B6B', color: '#1a1a2e' }}
+                      >
+                        {player?.nickname.charAt(0).toUpperCase() ?? '?'}
+                      </div>
+                      <span className="text-foreground font-medium text-sm">{player?.nickname ?? 'Unknown'}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {new Date(buzz.buzzed_at).toLocaleTimeString([], { minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 })}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Start button */}
         {players.length >= 1 && (
           <motion.div

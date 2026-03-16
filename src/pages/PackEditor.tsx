@@ -516,6 +516,16 @@ function MobilePreview({ slide, content }: { slide: Slide; content: SlideContent
         </div>
       </div>
 
+      {/* Buzzer button in preview */}
+      {content.buzzerEnabled && (
+        <div className="px-2 pb-1">
+          <div className="bg-destructive rounded-lg py-1.5 text-center flex items-center justify-center gap-1">
+            <Bell className="w-2.5 h-2.5 text-destructive-foreground" />
+            <span className="text-[8px] font-bold text-destructive-foreground">BUZZ!</span>
+          </div>
+        </div>
+      )}
+
       {/* Bottom bar */}
       <div className="h-5 bg-card flex items-center justify-center gap-3">
         <div className="flex items-center gap-0.5 text-muted-foreground">
@@ -526,6 +536,12 @@ function MobilePreview({ slide, content }: { slide: Slide; content: SlideContent
           <Award className="w-2.5 h-2.5" />
           <span className="text-[7px]">{slide.points_possible || 100}pt</span>
         </div>
+        {content.buzzerEnabled && (
+          <div className="flex items-center gap-0.5 text-destructive">
+            <Bell className="w-2.5 h-2.5" />
+            <span className="text-[7px]">{content.buzzerMode === 'all' ? 'all' : '1st'}</span>
+          </div>
+        )}
       </div>
     </div>
   );
