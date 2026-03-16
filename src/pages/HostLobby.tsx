@@ -11,6 +11,7 @@ const HostLobby = () => {
   const { room, loading } = useRoom(code ?? null);
   const players = usePlayers(room?.id ?? null);
 
+  const { buzzes, clearBuzzes } = useBuzzes(room?.id ?? null, room?.current_slide_index ?? 0);
   const joinUrl = `${window.location.origin}/play/${code}`;
 
   if (loading) {
