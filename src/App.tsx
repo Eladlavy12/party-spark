@@ -22,6 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/host/:code" element={<HostLobby />} />
+          <Route path="/host/:code/game" element={<HostGame />} />
           <Route path="/play/:code" element={<PlayerJoin />} />
           <Route path="/studio" element={<Studio />} />
           <Route path="/studio/:packId" element={<PackEditor />} />

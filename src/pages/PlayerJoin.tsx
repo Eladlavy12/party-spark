@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { getRandomColor } from '@/lib/game-utils';
+import PlayerGame from './PlayerGame';
 
 const PlayerJoin = () => {
   const { code } = useParams<{ code: string }>();
@@ -30,7 +31,6 @@ const PlayerJoin = () => {
       avatar_color: getRandomColor(),
     });
     if (!error) {
-      // Get the player id from the inserted row
       const { data: playerData } = await supabase
         .from('players')
         .select('id')
@@ -64,6 +64,11 @@ const PlayerJoin = () => {
         <p className="text-muted-foreground text-center">The room code "{code}" doesn't exist or has expired.</p>
       </div>
     );
+  }
+
+  // If game is playing and player has joined, show game UI
+  if (joined && playerId && room.status === 'playing') {
+    return <PlayerGame playerId={playerId} playerName={playerName} />;
   }
 
   if (joined) {
