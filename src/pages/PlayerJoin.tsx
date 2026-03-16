@@ -16,7 +16,10 @@ const PlayerJoin = () => {
   const [nickname, setNickname] = useState('');
   const [joined, setJoined] = useState(false);
   const [playerName, setPlayerName] = useState('');
+  const [playerId, setPlayerId] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
+  const [buzzed, setBuzzed] = useState(false);
+  const { sendBuzz } = useBuzzes(room?.id ?? null, room?.current_slide_index ?? 0);
 
   const handleJoin = async () => {
     if (!room || !nickname.trim()) return;
