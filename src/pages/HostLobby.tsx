@@ -143,7 +143,7 @@ const HostLobby = () => {
                       </div>
                       <span className="text-foreground font-medium text-sm">{player?.nickname ?? 'Unknown'}</span>
                       <span className="ml-auto text-xs text-muted-foreground">
-                        {new Date(buzz.buzzed_at).toLocaleTimeString([], { minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 })}
+                        {new Date(buzz.buzzed_at).toLocaleTimeString([], { minute: '2-digit', second: '2-digit' } as Intl.DateTimeFormatOptions)}
                       </span>
                     </motion.div>
                   );
