@@ -138,6 +138,19 @@ export default function PackEditor() {
     await Promise.all(updated.map((s) => supabase.from('slides').update({ order_index: s.order_index }).eq('id', s.id)));
   }
 
+  async function togglePublish() {
+    if (!pack) return;
+    const newVal = !pack.is_published;
+    const { error } = await supabase
+      .from('content_packs')
+      .update({ is_published: newVal })
+      .eq('id', pack.id);
+    if (!error) {
+      setPack({ ...pack, is_published: newVal });
+      toast({ title: newVal ? 'Pack published!' : 'Pack unpublished' });
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
