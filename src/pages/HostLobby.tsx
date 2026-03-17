@@ -24,13 +24,27 @@ const HostLobby = () => {
   const [packsOpen, setPacksOpen] = useState(false);
   const [starting, setStarting] = useState(false);
 
-  // Load available content packs
   useEffect(() => {
-    supabase.from('content_packs').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => {
-        if (data) setPacks(data);
-      });
-  }, []);
+    const loadPacks = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const hostUserId = session?.user?.id ?? room?.host_id;
+      if (!hostUserId) return;
+
+      const { data } = await supabase
+        .from('content_packs')
+        .select('*')
+        .eq('creator_id', hostUserId)
+        .eq('is_published', true)
+        .order('updated_at', { ascending: false });
+
+      if (data) setPacks(data);
+    };
+
+    void loadPacks();
+  }, [room?.host_id]);
 
   // If room already has a pack selected, use it
   useEffect(() => {
