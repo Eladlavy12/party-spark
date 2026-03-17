@@ -4,7 +4,7 @@ import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   ArrowLeft, Plus, Trash2, GripVertical, Save, Clock, Award,
   Info, MessageSquare, CheckSquare, Star, Pencil, Smartphone, Loader2,
-  Bell, BellOff,
+  Bell, BellOff, Globe, GlobeLock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -138,6 +138,19 @@ export default function PackEditor() {
     await Promise.all(updated.map((s) => supabase.from('slides').update({ order_index: s.order_index }).eq('id', s.id)));
   }
 
+  async function togglePublish() {
+    if (!pack) return;
+    const newVal = !pack.is_published;
+    const { error } = await supabase
+      .from('content_packs')
+      .update({ is_published: newVal })
+      .eq('id', pack.id);
+    if (!error) {
+      setPack({ ...pack, is_published: newVal });
+      toast({ title: newVal ? 'Pack published!' : 'Pack unpublished' });
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -176,6 +189,15 @@ export default function PackEditor() {
                 <Save className="w-3 h-3" /> Saved
               </Badge>
             )}
+            <Button
+              variant={pack.is_published ? 'outline' : 'hero'}
+              size="sm"
+              onClick={togglePublish}
+              className="gap-1.5"
+            >
+              {pack.is_published ? <GlobeLock className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+              {pack.is_published ? 'Unpublish' : 'Publish'}
+            </Button>
           </div>
         </div>
       </header>
