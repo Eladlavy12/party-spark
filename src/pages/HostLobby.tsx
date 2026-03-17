@@ -198,7 +198,7 @@ const HostLobby = () => {
         )}
 
         {/* Pack selection + Start */}
-        {players.length >= 1 && (
+        {(
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-4">
             {/* Pack selector */}
             <div className="relative">
