@@ -189,6 +189,15 @@ export default function PackEditor() {
                 <Save className="w-3 h-3" /> Saved
               </Badge>
             )}
+            <Button
+              variant={pack.is_published ? 'outline' : 'hero'}
+              size="sm"
+              onClick={togglePublish}
+              className="gap-1.5"
+            >
+              {pack.is_published ? <GlobeLock className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+              {pack.is_published ? 'Unpublish' : 'Publish'}
+            </Button>
           </div>
         </div>
       </header>
