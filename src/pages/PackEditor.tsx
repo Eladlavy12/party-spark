@@ -357,36 +357,52 @@ export default function PackEditor() {
                 {/* Time & Points */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Time Limit
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <Slider
-                        value={[selectedSlide.time_limit || 30]}
-                        onValueChange={([v]) => updateSlide(selectedSlide.id, { time_limit: v })}
-                        min={5}
-                        max={120}
-                        step={5}
-                        className="flex-1"
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Time Limit
+                      </label>
+                      <Switch
+                        checked={selectedSlide.time_limit !== null && selectedSlide.time_limit > 0}
+                        onCheckedChange={(v) => updateSlide(selectedSlide.id, { time_limit: v ? 30 : null })}
                       />
-                      <span className="text-sm font-mono text-muted-foreground w-10 text-right">{selectedSlide.time_limit || 30}s</span>
                     </div>
+                    {selectedSlide.time_limit !== null && selectedSlide.time_limit > 0 && (
+                      <div className="flex items-center gap-3">
+                        <Slider
+                          value={[selectedSlide.time_limit]}
+                          onValueChange={([v]) => updateSlide(selectedSlide.id, { time_limit: v })}
+                          min={5}
+                          max={120}
+                          step={5}
+                          className="flex-1"
+                        />
+                        <span className="text-sm font-mono text-muted-foreground w-10 text-right">{selectedSlide.time_limit}s</span>
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
-                      <Award className="w-3.5 h-3.5 text-muted-foreground" /> Points
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <Slider
-                        value={[selectedSlide.points_possible || 100]}
-                        onValueChange={([v]) => updateSlide(selectedSlide.id, { points_possible: v })}
-                        min={0}
-                        max={500}
-                        step={50}
-                        className="flex-1"
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5 text-muted-foreground" /> Points
+                      </label>
+                      <Switch
+                        checked={selectedSlide.points_possible !== null && selectedSlide.points_possible > 0}
+                        onCheckedChange={(v) => updateSlide(selectedSlide.id, { points_possible: v ? 100 : null })}
                       />
-                      <span className="text-sm font-mono text-muted-foreground w-10 text-right">{selectedSlide.points_possible || 100}</span>
                     </div>
+                    {selectedSlide.points_possible !== null && selectedSlide.points_possible > 0 && (
+                      <div className="flex items-center gap-3">
+                        <Slider
+                          value={[selectedSlide.points_possible]}
+                          onValueChange={([v]) => updateSlide(selectedSlide.id, { points_possible: v })}
+                          min={0}
+                          max={500}
+                          step={50}
+                          className="flex-1"
+                        />
+                        <span className="text-sm font-mono text-muted-foreground w-10 text-right">{selectedSlide.points_possible}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
