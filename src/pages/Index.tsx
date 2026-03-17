@@ -14,21 +14,30 @@ const Index = () => {
 
   const handleCreateRoom = async () => {
     setCreating(true);
-    // Sign in anonymously as host
-    const { data: authData } = await supabase.auth.signInAnonymously();
-    if (!authData.user) {
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    let hostUser = session?.user ?? null;
+
+    if (!hostUser) {
+      const { data: authData } = await supabase.auth.signInAnonymously();
+      hostUser = authData.user ?? null;
+    }
+
+    if (!hostUser) {
       setCreating(false);
       return;
     }
 
     let code = generateRoomCode();
-    // Ensure unique code
     const { data: existing } = await supabase.from('rooms').select('id').eq('code', code).maybeSingle();
     if (existing) code = generateRoomCode();
 
     const { data: room, error } = await supabase.from('rooms').insert({
       code,
-      host_id: authData.user.id,
+      host_id: hostUser.id,
       status: 'lobby' as const,
     }).select().single();
 
