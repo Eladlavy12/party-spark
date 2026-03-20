@@ -2,18 +2,219 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRoom, usePlayers } from '@/hooks/use-realtime';
 import { useBuzzes } from '@/hooks/use-buzzer';
+import { useSubmissions } from '@/hooks/use-submissions';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2, Users, ChevronRight, ChevronLeft, Bell, Trash2,
   Trophy, Clock, Info, MessageSquare, CheckSquare, Star, Pencil,
+  Eye, EyeOff, ListOrdered, UserRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { SlideContent } from '@/lib/slide-templates';
 
 type Slide = Database['public']['Tables']['slides']['Row'];
+type Player = Database['public']['Tables']['players']['Row'];
+type Submission = Database['public']['Tables']['submissions']['Row'];
 
+type AnswerVisibility =
+  | { mode: 'host-only' }
+  | { mode: 'fastest'; count: number }
+  | { mode: 'all-anonymous' }
+  | { mode: 'all-named' };
+
+/* ─── Answer display helper ─── */
+function formatAnswer(sub: Submission): string {
+  const data = sub.answer_data as Record<string, unknown> | null;
+  if (!data) return '—';
+  if (data.text) return String(data.text);
+  if (data.selectedOption) return String(data.selectedOption);
+  if (data.selectedIndex !== undefined) return `Option ${String.fromCharCode(65 + Number(data.selectedIndex))}`;
+  if (data.rating !== undefined) return `${data.rating}/10`;
+  return JSON.stringify(data);
+}
+
+/* ─── Submissions Panel ─── */
+function SubmissionsPanel({
+  submissions,
+  players,
+  visibility,
+}: {
+  submissions: Submission[];
+  players: Player[];
+  visibility: AnswerVisibility;
+}) {
+  if (submissions.length === 0) {
+    return <p className="text-xs text-muted-foreground">No answers yet…</p>;
+  }
+
+  let visibleSubs = submissions;
+
+  if (visibility.mode === 'fastest') {
+    visibleSubs = submissions.slice(0, visibility.count);
+  }
+
+  const showName = visibility.mode === 'all-named' || visibility.mode === 'fastest';
+
+  return (
+    <div className="space-y-1.5">
+      {visibleSubs.map((sub, i) => {
+        const player = players.find((p) => p.id === sub.player_id);
+        return (
+          <motion.div
+            key={sub.id}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.04 }}
+            className="flex items-start gap-2 bg-muted/50 rounded-lg px-3 py-2"
+          >
+            {showName && (
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5"
+                style={{ backgroundColor: player?.avatar_color ?? '#FF6B6B', color: '#1a1a2e' }}
+              >
+                {player?.nickname?.charAt(0).toUpperCase() ?? '?'}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              {showName && (
+                <span className="text-[11px] text-muted-foreground font-medium block truncate">
+                  {player?.nickname ?? 'Unknown'}
+                </span>
+              )}
+              <span className="text-foreground text-xs">{formatAnswer(sub)}</span>
+            </div>
+            {visibility.mode === 'fastest' && (
+              <span className="text-[10px] text-muted-foreground font-bold shrink-0">#{i + 1}</span>
+            )}
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── Visibility Dropdown ─── */
+function VisibilityDropdown({
+  visibility,
+  setVisibility,
+}: {
+  visibility: AnswerVisibility;
+  setVisibility: (v: AnswerVisibility) => void;
+}) {
+  const [fastestCount, setFastestCount] = useState(
+    visibility.mode === 'fastest' ? visibility.count : 3
+  );
+
+  const label = {
+    'host-only': 'Host only',
+    fastest: `Fastest ${visibility.mode === 'fastest' ? visibility.count : fastestCount}`,
+    'all-anonymous': 'All (anonymous)',
+    'all-named': 'All (with names)',
+  }[visibility.mode];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1.5 text-muted-foreground">
+          {visibility.mode === 'host-only' ? (
+            <EyeOff className="w-3.5 h-3.5" />
+          ) : (
+            <Eye className="w-3.5 h-3.5" />
+          )}
+          {label}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="text-xs">Answer Visibility</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => setVisibility({ mode: 'host-only' })}
+          className={visibility.mode === 'host-only' ? 'bg-accent/50' : ''}
+        >
+          <EyeOff className="w-4 h-4 mr-2" />
+          <div>
+            <span className="block text-sm font-medium">Host only</span>
+            <span className="block text-[11px] text-muted-foreground">Only you see answers</span>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={(e) => {
+            e.preventDefault();
+            setVisibility({ mode: 'fastest', count: fastestCount });
+          }}
+          className={`flex-col items-start gap-1.5 ${visibility.mode === 'fastest' ? 'bg-accent/50' : ''}`}
+        >
+          <div className="flex items-center gap-2 w-full">
+            <ListOrdered className="w-4 h-4 shrink-0" />
+            <div className="flex-1">
+              <span className="block text-sm font-medium">Fastest responses</span>
+              <span className="block text-[11px] text-muted-foreground">Show top N answers</span>
+            </div>
+          </div>
+          <div
+            className="flex items-center gap-2 pl-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="text-xs text-muted-foreground">Show top</span>
+            <Input
+              type="number"
+              min={1}
+              max={50}
+              value={fastestCount}
+              onChange={(e) => {
+                const v = parseInt(e.target.value) || 1;
+                setFastestCount(v);
+                if (visibility.mode === 'fastest') {
+                  setVisibility({ mode: 'fastest', count: v });
+                }
+              }}
+              className="w-16 h-7 text-xs text-center"
+            />
+            {visibility.mode !== 'fastest' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setVisibility({ mode: 'fastest', count: fastestCount })}
+              >
+                Apply
+              </Button>
+            )}
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => setVisibility({ mode: 'all-anonymous' })}
+          className={visibility.mode === 'all-anonymous' ? 'bg-accent/50' : ''}
+        >
+          <Eye className="w-4 h-4 mr-2" />
+          <div>
+            <span className="block text-sm font-medium">All (anonymous)</span>
+            <span className="block text-[11px] text-muted-foreground">Show answers without names</span>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => setVisibility({ mode: 'all-named' })}
+          className={visibility.mode === 'all-named' ? 'bg-accent/50' : ''}
+        >
+          <UserRound className="w-4 h-4 mr-2" />
+          <div>
+            <span className="block text-sm font-medium">All (with names)</span>
+            <span className="block text-[11px] text-muted-foreground">Show answers + player names</span>
+          </div>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/* ─── Main HostGame ─── */
 const HostGame = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
@@ -24,8 +225,8 @@ const HostGame = () => {
 
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loadingSlides, setLoadingSlides] = useState(true);
+  const [visibility, setVisibility] = useState<AnswerVisibility>({ mode: 'host-only' });
 
-  // Load slides for the selected pack
   useEffect(() => {
     if (!room?.current_pack_id) return;
     setLoadingSlides(true);
@@ -43,6 +244,8 @@ const HostGame = () => {
   const currentSlide = slides[slideIndex] ?? null;
   const content = currentSlide ? (currentSlide.content as unknown as SlideContent) : null;
   const isLast = slideIndex >= slides.length - 1;
+
+  const submissions = useSubmissions(room?.id ?? null, currentSlide?.id ?? null);
 
   const goToSlide = async (index: number) => {
     if (!room) return;
@@ -117,22 +320,18 @@ const HostGame = () => {
                   {content.template === 'drawing' && <Pencil className="w-10 h-10 text-primary mx-auto" />}
                 </div>
 
-                {/* Title */}
                 <h2 className="text-4xl font-bold text-foreground mb-4">{content.title || 'Untitled Slide'}</h2>
 
-                {/* Body */}
                 {content.body && (
                   <p className="text-xl text-muted-foreground mb-6 max-w-xl mx-auto">{content.body}</p>
                 )}
 
-                {/* Media */}
                 {content.mediaUrl && (
                   <div className="mb-6 rounded-2xl overflow-hidden inline-block border border-border">
                     <img src={content.mediaUrl} alt="" className="max-h-80 object-contain" />
                   </div>
                 )}
 
-                {/* Multiple choice options (host view) */}
                 {content.template === 'multiple-choice' && content.options && (
                   <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto mt-4">
                     {content.options.map((opt, i) => (
@@ -151,6 +350,27 @@ const HostGame = () => {
                       </div>
                     ))}
                   </div>
+                )}
+
+                {/* Presented answers (non host-only) */}
+                {visibility.mode !== 'host-only' && submissions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-8 max-w-lg mx-auto"
+                  >
+                    <div className="bg-card border border-border rounded-xl p-4">
+                      <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-primary" />
+                        Answers ({submissions.length})
+                      </h4>
+                      <SubmissionsPanel
+                        submissions={submissions}
+                        players={players}
+                        visibility={visibility}
+                      />
+                    </div>
+                  </motion.div>
                 )}
 
                 {/* Slide meta */}
@@ -198,8 +418,26 @@ const HostGame = () => {
           </div>
         </main>
 
-        {/* Sidebar: Buzzes + Players */}
+        {/* Sidebar */}
         <aside className="w-72 border-l border-border bg-card/30 flex flex-col shrink-0 overflow-y-auto">
+          {/* Answer visibility + Submissions (host always sees) */}
+          {content && content.template !== 'information' && (
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-foreground font-semibold text-sm flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                  Answers ({submissions.length})
+                </h3>
+                <VisibilityDropdown visibility={visibility} setVisibility={setVisibility} />
+              </div>
+              <SubmissionsPanel
+                submissions={submissions}
+                players={players}
+                visibility={{ mode: 'all-named' }}
+              />
+            </div>
+          )}
+
           {/* Buzzes */}
           {content?.buzzerEnabled && (
             <div className="p-4 border-b border-border">
