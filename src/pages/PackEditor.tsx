@@ -242,17 +242,28 @@ export default function PackEditor() {
                 const isSelected = slide.id === selectedSlideId;
                 return (
                   <Reorder.Item key={slide.id} value={slide} className="list-none">
-                    <button
-                      onClick={() => setSelectedSlideId(slide.id)}
-                      className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-sm transition-colors group ${
-                        isSelected ? 'bg-primary/15 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                      }`}
-                    >
-                      <GripVertical className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-50 cursor-grab" />
-                      <Icon className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate flex-1">{content?.title || `Slide ${i + 1}`}</span>
-                      <span className="text-xs opacity-50">{i + 1}</span>
-                    </button>
+                    <div className="flex items-center group">
+                      <button
+                        onClick={() => setSelectedSlideId(slide.id)}
+                        className={`flex-1 flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-sm transition-colors ${
+                          isSelected ? 'bg-primary/15 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                        }`}
+                      >
+                        <GripVertical className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-50 cursor-grab" />
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate flex-1">{content?.title || `Slide ${i + 1}`}</span>
+                        <span className="text-xs opacity-50">{i + 1}</span>
+                      </button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => { e.stopPropagation(); duplicateSlide(slide.id); }}
+                        title="Duplicate slide"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </Reorder.Item>
                 );
               })}
