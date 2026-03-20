@@ -4,7 +4,7 @@ import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   ArrowLeft, Plus, Trash2, GripVertical, Save, Clock, Award,
   Info, MessageSquare, CheckSquare, Star, Pencil, Smartphone, Loader2,
-  Bell, BellOff, Globe, GlobeLock,
+  Bell, BellOff, Globe, GlobeLock, Copy, Eye, EyeOff, ListOrdered, UserRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,10 +20,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 import type { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAutosave } from '@/hooks/use-autosave';
-import type { SlideTemplate, SlideContent } from '@/lib/slide-templates';
+import type { SlideTemplate, SlideContent, AnswerVisibility } from '@/lib/slide-templates';
 import { SLIDE_TEMPLATES, getDefaultContent } from '@/lib/slide-templates';
 
 type Slide = Database['public']['Tables']['slides']['Row'];
@@ -131,6 +135,25 @@ export default function PackEditor() {
     });
   }
 
+  async function duplicateSlide(id: string) {
+    const source = slides.find((s) => s.id === id);
+    if (!source || !packId) return;
+    const newIndex = slides.length;
+    const insertData = {
+      pack_id: packId,
+      order_index: newIndex,
+      content: source.content,
+      time_limit: source.time_limit,
+      points_possible: source.points_possible,
+    };
+    const { data } = await supabase.from('slides').insert([insertData]).select().single();
+    if (data) {
+      setSlides((prev) => [...prev, data]);
+      setSelectedSlideId(data.id);
+      toast({ title: 'Slide duplicated' });
+    }
+  }
+
   async function handleReorder(reordered: Slide[]) {
     const updated = reordered.map((s, i) => ({ ...s, order_index: i }));
     setSlides(updated);
@@ -219,17 +242,28 @@ export default function PackEditor() {
                 const isSelected = slide.id === selectedSlideId;
                 return (
                   <Reorder.Item key={slide.id} value={slide} className="list-none">
-                    <button
-                      onClick={() => setSelectedSlideId(slide.id)}
-                      className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-sm transition-colors group ${
-                        isSelected ? 'bg-primary/15 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                      }`}
-                    >
-                      <GripVertical className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-50 cursor-grab" />
-                      <Icon className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate flex-1">{content?.title || `Slide ${i + 1}`}</span>
-                      <span className="text-xs opacity-50">{i + 1}</span>
-                    </button>
+                    <div className="flex items-center group">
+                      <button
+                        onClick={() => setSelectedSlideId(slide.id)}
+                        className={`flex-1 flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-sm transition-colors ${
+                          isSelected ? 'bg-primary/15 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                        }`}
+                      >
+                        <GripVertical className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-50 cursor-grab" />
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate flex-1">{content?.title || `Slide ${i + 1}`}</span>
+                        <span className="text-xs opacity-50">{i + 1}</span>
+                      </button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => { e.stopPropagation(); duplicateSlide(slide.id); }}
+                        title="Duplicate slide"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </Reorder.Item>
                 );
               })}
@@ -441,8 +475,22 @@ export default function PackEditor() {
                   )}
                 </div>
 
-                {/* Delete slide */}
-                <div className="pt-4 border-t border-border">
+                {/* Answer Visibility */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                    <Eye className="w-3.5 h-3.5 text-muted-foreground" /> Answer Presentation
+                  </label>
+                  <AnswerVisibilityPicker
+                    value={slideContent.answerVisibility || { mode: 'host-only' }}
+                    onChange={(v) => updateSlideContent(selectedSlide.id, { answerVisibility: v })}
+                  />
+                </div>
+
+                {/* Delete & Duplicate */}
+                <div className="pt-4 border-t border-border flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => duplicateSlide(selectedSlide.id)}>
+                    <Copy className="w-3.5 h-3.5 mr-1" /> Duplicate
+                  </Button>
                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteSlide(selectedSlide.id)}>
                     <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete Slide
                   </Button>
@@ -470,6 +518,73 @@ export default function PackEditor() {
           )}
         </main>
       </div>
+    </div>
+  );
+}
+
+const VISIBILITY_OPTIONS: { mode: AnswerVisibility['mode']; label: string; icon: React.ElementType; description: string }[] = [
+  { mode: 'host-only', label: 'Host Only', icon: EyeOff, description: 'Only host sees answers' },
+  { mode: 'fastest', label: 'Fastest Responses', icon: ListOrdered, description: 'Show top N fastest answers' },
+  { mode: 'all-anonymous', label: 'All (Anonymous)', icon: Eye, description: 'Show all answers without names' },
+  { mode: 'all-named', label: 'All (With Names)', icon: UserRound, description: 'Show all answers with player names' },
+];
+
+function AnswerVisibilityPicker({
+  value,
+  onChange,
+}: {
+  value: AnswerVisibility;
+  onChange: (v: AnswerVisibility) => void;
+}) {
+  const [fastestCount, setFastestCount] = useState(value.mode === 'fastest' ? value.count : 3);
+  const current = VISIBILITY_OPTIONS.find((o) => o.mode === value.mode) || VISIBILITY_OPTIONS[0];
+
+  return (
+    <div className="space-y-2">
+      <Select
+        value={value.mode}
+        onValueChange={(m) => {
+          const mode = m as AnswerVisibility['mode'];
+          if (mode === 'fastest') {
+            onChange({ mode: 'fastest', count: fastestCount });
+          } else {
+            onChange({ mode } as AnswerVisibility);
+          }
+        }}
+      >
+        <SelectTrigger className="bg-muted border-border">
+          <SelectValue>{current.label}</SelectValue>
+        </SelectTrigger>
+        <SelectContent className="bg-card border-border">
+          {VISIBILITY_OPTIONS.map((opt) => (
+            <SelectItem key={opt.mode} value={opt.mode}>
+              <span className="flex items-center gap-2">
+                {opt.label}
+                <span className="text-xs text-muted-foreground">— {opt.description}</span>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {value.mode === 'fastest' && (
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted-foreground">Show top</label>
+          <Input
+            type="number"
+            min={1}
+            max={50}
+            value={fastestCount}
+            onChange={(e) => {
+              const n = Math.max(1, parseInt(e.target.value) || 1);
+              setFastestCount(n);
+              onChange({ mode: 'fastest', count: n });
+            }}
+            className="bg-muted border-border w-20 h-8 text-sm"
+          />
+          <label className="text-xs text-muted-foreground">answers</label>
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground">{current.description}</p>
     </div>
   );
 }
