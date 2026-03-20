@@ -135,6 +135,25 @@ export default function PackEditor() {
     });
   }
 
+  async function duplicateSlide(id: string) {
+    const source = slides.find((s) => s.id === id);
+    if (!source || !packId) return;
+    const newIndex = slides.length;
+    const insertData = {
+      pack_id: packId,
+      order_index: newIndex,
+      content: source.content,
+      time_limit: source.time_limit,
+      points_possible: source.points_possible,
+    };
+    const { data } = await supabase.from('slides').insert([insertData]).select().single();
+    if (data) {
+      setSlides((prev) => [...prev, data]);
+      setSelectedSlideId(data.id);
+      toast({ title: 'Slide duplicated' });
+    }
+  }
+
   async function handleReorder(reordered: Slide[]) {
     const updated = reordered.map((s, i) => ({ ...s, order_index: i }));
     setSlides(updated);
