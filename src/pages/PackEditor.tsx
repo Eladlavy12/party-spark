@@ -589,7 +589,7 @@ function AnswerVisibilityPicker({
   );
 }
 
-
+function MobilePreview({ slide, content }: { slide: Slide; content: SlideContent }) {
   return (
     <div className="w-48 h-80 bg-background rounded-3xl border-2 border-border overflow-hidden flex flex-col shadow-lg">
       {/* Status bar */}
