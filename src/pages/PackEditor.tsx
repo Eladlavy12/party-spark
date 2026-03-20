@@ -522,7 +522,74 @@ export default function PackEditor() {
   );
 }
 
-function MobilePreview({ slide, content }: { slide: Slide; content: SlideContent }) {
+const VISIBILITY_OPTIONS: { mode: AnswerVisibility['mode']; label: string; icon: React.ElementType; description: string }[] = [
+  { mode: 'host-only', label: 'Host Only', icon: EyeOff, description: 'Only host sees answers' },
+  { mode: 'fastest', label: 'Fastest Responses', icon: ListOrdered, description: 'Show top N fastest answers' },
+  { mode: 'all-anonymous', label: 'All (Anonymous)', icon: Eye, description: 'Show all answers without names' },
+  { mode: 'all-named', label: 'All (With Names)', icon: UserRound, description: 'Show all answers with player names' },
+];
+
+function AnswerVisibilityPicker({
+  value,
+  onChange,
+}: {
+  value: AnswerVisibility;
+  onChange: (v: AnswerVisibility) => void;
+}) {
+  const [fastestCount, setFastestCount] = useState(value.mode === 'fastest' ? value.count : 3);
+  const current = VISIBILITY_OPTIONS.find((o) => o.mode === value.mode) || VISIBILITY_OPTIONS[0];
+
+  return (
+    <div className="space-y-2">
+      <Select
+        value={value.mode}
+        onValueChange={(m) => {
+          const mode = m as AnswerVisibility['mode'];
+          if (mode === 'fastest') {
+            onChange({ mode: 'fastest', count: fastestCount });
+          } else {
+            onChange({ mode } as AnswerVisibility);
+          }
+        }}
+      >
+        <SelectTrigger className="bg-muted border-border">
+          <SelectValue>{current.label}</SelectValue>
+        </SelectTrigger>
+        <SelectContent className="bg-card border-border">
+          {VISIBILITY_OPTIONS.map((opt) => (
+            <SelectItem key={opt.mode} value={opt.mode}>
+              <span className="flex items-center gap-2">
+                {opt.label}
+                <span className="text-xs text-muted-foreground">— {opt.description}</span>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {value.mode === 'fastest' && (
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted-foreground">Show top</label>
+          <Input
+            type="number"
+            min={1}
+            max={50}
+            value={fastestCount}
+            onChange={(e) => {
+              const n = Math.max(1, parseInt(e.target.value) || 1);
+              setFastestCount(n);
+              onChange({ mode: 'fastest', count: n });
+            }}
+            className="bg-muted border-border w-20 h-8 text-sm"
+          />
+          <label className="text-xs text-muted-foreground">answers</label>
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground">{current.description}</p>
+    </div>
+  );
+}
+
+
   return (
     <div className="w-48 h-80 bg-background rounded-3xl border-2 border-border overflow-hidden flex flex-col shadow-lg">
       {/* Status bar */}
