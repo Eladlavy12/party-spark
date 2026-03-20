@@ -27,7 +27,7 @@ import {
 import type { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAutosave } from '@/hooks/use-autosave';
-import type { SlideTemplate, SlideContent } from '@/lib/slide-templates';
+import type { SlideTemplate, SlideContent, AnswerVisibility } from '@/lib/slide-templates';
 import { SLIDE_TEMPLATES, getDefaultContent } from '@/lib/slide-templates';
 
 type Slide = Database['public']['Tables']['slides']['Row'];
