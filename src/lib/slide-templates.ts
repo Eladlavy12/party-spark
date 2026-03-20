@@ -40,6 +40,12 @@ export const SLIDE_TEMPLATES: SlideTemplateConfig[] = [
   },
 ];
 
+export type AnswerVisibility =
+  | { mode: 'host-only' }
+  | { mode: 'fastest'; count: number }
+  | { mode: 'all-anonymous' }
+  | { mode: 'all-named' };
+
 export interface SlideContent {
   template: SlideTemplate;
   title: string;
@@ -49,6 +55,7 @@ export interface SlideContent {
   correctOptionIndex?: number;
   buzzerEnabled?: boolean;
   buzzerMode?: 'first' | 'all'; // 'first' = first-buzz-wins, 'all' = everyone can buzz
+  answerVisibility?: AnswerVisibility;
 }
 
 export function getDefaultContent(template: SlideTemplate): SlideContent {
