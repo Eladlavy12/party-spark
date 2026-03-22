@@ -250,6 +250,22 @@ const HostGame = () => {
 
   const submissions = useSubmissions(room?.id ?? null, currentSlide?.id ?? null);
 
+  // Countdown timer
+  const timeLimit = currentSlide?.time_limit;
+  const { remaining, progress } = useCountdown({
+    duration: timeLimit && timeLimit > 0 ? timeLimit : null,
+    active: timerActive,
+  });
+
+  // Start timer when slide changes
+  useEffect(() => {
+    if (currentSlide?.time_limit && currentSlide.time_limit > 0) {
+      setTimerActive(true);
+    } else {
+      setTimerActive(false);
+    }
+  }, [slideIndex, currentSlide?.id]);
+
   const goToSlide = async (index: number) => {
     if (!room) return;
     await supabase.from('rooms').update({ current_slide_index: index }).eq('id', room.id);
