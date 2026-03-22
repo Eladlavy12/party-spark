@@ -536,17 +536,6 @@ export default function PackEditor() {
                   )}
                 </div>
 
-                {/* Answer Visibility */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                    <Eye className="w-3.5 h-3.5 text-muted-foreground" /> Answer Presentation
-                  </label>
-                  <AnswerVisibilityPicker
-                    value={slideContent.answerVisibility || { mode: 'host-only' }}
-                    onChange={(v) => updateSlideContent(selectedSlide.id, { answerVisibility: v })}
-                  />
-                </div>
-
                 {/* Delete & Duplicate */}
                 <div className="pt-4 border-t border-border flex items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={() => duplicateSlide(selectedSlide.id)}>
