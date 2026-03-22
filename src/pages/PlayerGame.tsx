@@ -109,11 +109,14 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background p-4">
-      {/* Slide indicator */}
-      <div className="text-center mb-4">
+      {/* Slide indicator + timer */}
+      <div className="flex items-center justify-between mb-4 px-2">
         <span className="text-xs text-muted-foreground">
           Slide {slideIndex + 1} / {slides.length}
         </span>
+        {timeLimit && timeLimit > 0 && !submitted && content?.template !== 'information' && (
+          <CountdownTimer remaining={remaining} progress={progress} size="sm" />
+        )}
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center">
