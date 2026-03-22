@@ -680,14 +680,18 @@ function MobilePreview({ slide, content }: { slide: Slide; content: SlideContent
 
       {/* Bottom bar */}
       <div className="h-5 bg-card flex items-center justify-center gap-3">
-        <div className="flex items-center gap-0.5 text-muted-foreground">
-          <Clock className="w-2.5 h-2.5" />
-          <span className="text-[7px]">{slide.time_limit || 30}s</span>
-        </div>
-        <div className="flex items-center gap-0.5 text-muted-foreground">
-          <Award className="w-2.5 h-2.5" />
-          <span className="text-[7px]">{slide.points_possible || 100}pt</span>
-        </div>
+        {slide.time_limit != null && slide.time_limit > 0 && (
+          <div className="flex items-center gap-0.5 text-muted-foreground">
+            <Clock className="w-2.5 h-2.5" />
+            <span className="text-[7px]">{slide.time_limit}s</span>
+          </div>
+        )}
+        {slide.points_possible != null && slide.points_possible > 0 && (
+          <div className="flex items-center gap-0.5 text-muted-foreground">
+            <Award className="w-2.5 h-2.5" />
+            <span className="text-[7px]">{slide.points_possible}pt</span>
+          </div>
+        )}
         {content.buzzerEnabled && (
           <div className="flex items-center gap-0.5 text-destructive">
             <Bell className="w-2.5 h-2.5" />
