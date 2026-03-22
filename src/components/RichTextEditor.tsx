@@ -68,7 +68,7 @@ export function RichTextEditor({ content, onChange, placeholder, dir }: RichText
   // Sync external content changes
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content || '', false);
+      editor.commands.setContent(content || '');
     }
   }, [content]);
 
