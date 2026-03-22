@@ -232,15 +232,19 @@ const HostGame = () => {
   useEffect(() => {
     if (!room?.current_pack_id) return;
     setLoadingSlides(true);
-    supabase
-      .from('slides')
-      .select('*')
-      .eq('pack_id', room.current_pack_id)
-      .order('order_index')
-      .then(({ data }) => {
-        if (data) setSlides(data);
-        setLoadingSlides(false);
-      });
+    // Load slides and pack settings in parallel
+    Promise.all([
+      supabase.from('slides').select('*').eq('pack_id', room.current_pack_id).order('order_index'),
+      supabase.from('content_packs').select('settings').eq('id', room.current_pack_id).single(),
+    ]).then(([slidesRes, packRes]) => {
+      if (slidesRes.data) setSlides(slidesRes.data);
+      if (packRes.data?.settings) {
+        const ps = packRes.data.settings as unknown as PackSettings;
+        setPackSettings(ps);
+        if (ps.answerVisibility) setVisibility(ps.answerVisibility);
+      }
+      setLoadingSlides(false);
+    });
   }, [room?.current_pack_id]);
 
   const currentSlide = slides[slideIndex] ?? null;
