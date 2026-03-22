@@ -224,7 +224,9 @@ const HostGame = () => {
 
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loadingSlides, setLoadingSlides] = useState(true);
+  const [packSettings, setPackSettings] = useState<PackSettings>({});
   const [visibility, setVisibility] = useState<AnswerVisibility>({ mode: 'host-only' });
+  const [timerActive, setTimerActive] = useState(false);
   const [timerActive, setTimerActive] = useState(false);
 
   useEffect(() => {
