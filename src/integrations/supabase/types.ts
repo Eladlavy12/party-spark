@@ -61,6 +61,7 @@ export type Database = {
           game_type: Database["public"]["Enums"]["game_type"]
           id: string
           is_published: boolean | null
+          settings: Json | null
           title: string
           updated_at: string
         }
@@ -71,6 +72,7 @@ export type Database = {
           game_type: Database["public"]["Enums"]["game_type"]
           id?: string
           is_published?: boolean | null
+          settings?: Json | null
           title: string
           updated_at?: string
         }
@@ -81,6 +83,7 @@ export type Database = {
           game_type?: Database["public"]["Enums"]["game_type"]
           id?: string
           is_published?: boolean | null
+          settings?: Json | null
           title?: string
           updated_at?: string
         }

@@ -5,6 +5,7 @@ import {
   ArrowLeft, Plus, Trash2, GripVertical, Save, Clock, Award,
   Info, MessageSquare, CheckSquare, Star, Pencil, Smartphone, Loader2,
   Bell, BellOff, Globe, GlobeLock, Copy, Eye, EyeOff, ListOrdered, UserRound,
+  Settings, Palette, Edit3, Check, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +29,7 @@ import {
 import type { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAutosave } from '@/hooks/use-autosave';
-import type { SlideTemplate, SlideContent, AnswerVisibility } from '@/lib/slide-templates';
+import type { SlideTemplate, SlideContent, AnswerVisibility, PackSettings, PackTheme } from '@/lib/slide-templates';
 import { SLIDE_TEMPLATES, getDefaultContent } from '@/lib/slide-templates';
 
 type Slide = Database['public']['Tables']['slides']['Row'];
@@ -51,6 +52,10 @@ export default function PackEditor() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [selectedSlideId, setSelectedSlideId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPackSettings, setShowPackSettings] = useState(false);
+  const [packSettings, setPackSettings] = useState<PackSettings>({});
+  const [renamingSlideId, setRenamingSlideId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const selectedSlide = slides.find((s) => s.id === selectedSlideId) || null;
   const slideContent = selectedSlide ? (selectedSlide.content as unknown as SlideContent) : null;
@@ -65,7 +70,11 @@ export default function PackEditor() {
       supabase.from('content_packs').select('*').eq('id', packId!).single(),
       supabase.from('slides').select('*').eq('pack_id', packId!).order('order_index'),
     ]);
-    if (packRes.data) setPack(packRes.data);
+    if (packRes.data) {
+      setPack(packRes.data);
+      const ps = (packRes.data as any).settings as PackSettings | null;
+      if (ps) setPackSettings(ps);
+    }
     if (slidesRes.data) {
       setSlides(slidesRes.data);
       if (slidesRes.data.length > 0 && !selectedSlideId) {
@@ -162,6 +171,22 @@ export default function PackEditor() {
     await Promise.all(updated.map((s) => supabase.from('slides').update({ order_index: s.order_index }).eq('id', s.id)));
   }
 
+  async function savePackSettings(ps: PackSettings) {
+    if (!pack) return;
+    setPackSettings(ps);
+    await supabase.from('content_packs').update({ settings: ps as any }).eq('id', pack.id);
+  }
+
+  function startRename(slideId: string, currentName: string) {
+    setRenamingSlideId(slideId);
+    setRenameValue(currentName);
+  }
+
+  function confirmRename(slideId: string) {
+    updateSlideContent(slideId, { slideName: renameValue.trim() || undefined });
+    setRenamingSlideId(null);
+  }
+
   async function togglePublish() {
     if (!pack) return;
     const newVal = !pack.is_published;
@@ -214,6 +239,14 @@ export default function PackEditor() {
               </Badge>
             )}
             <Button
+              variant={showPackSettings ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => { setShowPackSettings(!showPackSettings); setSelectedSlideId(showPackSettings ? (slides[0]?.id ?? null) : null); }}
+              className="gap-1.5"
+            >
+              <Settings className="w-3.5 h-3.5" /> Settings
+            </Button>
+            <Button
               variant={pack.is_published ? 'outline' : 'hero'}
               size="sm"
               onClick={togglePublish}
@@ -244,26 +277,55 @@ export default function PackEditor() {
                 return (
                   <Reorder.Item key={slide.id} value={slide} className="list-none">
                     <div className="flex items-center group">
-                      <button
-                        onClick={() => setSelectedSlideId(slide.id)}
-                        className={`flex-1 flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-sm transition-colors ${
-                          isSelected ? 'bg-primary/15 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                        }`}
-                      >
-                        <GripVertical className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-50 cursor-grab" />
-                        <Icon className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate flex-1">{content?.title || `Slide ${i + 1}`}</span>
-                        <span className="text-xs opacity-50">{i + 1}</span>
-                      </button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => { e.stopPropagation(); duplicateSlide(slide.id); }}
-                        title="Duplicate slide"
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
+                      {renamingSlideId === slide.id ? (
+                        <div className="flex-1 flex items-center gap-1 px-1.5 py-1">
+                          <Input
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') confirmRename(slide.id); if (e.key === 'Escape') setRenamingSlideId(null); }}
+                            className="h-7 text-xs bg-muted border-border"
+                            autoFocus
+                          />
+                          <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => confirmRename(slide.id)}>
+                            <Check className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setRenamingSlideId(null)}>
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => { setSelectedSlideId(slide.id); setShowPackSettings(false); }}
+                            className={`flex-1 flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-sm transition-colors ${
+                              isSelected && !showPackSettings ? 'bg-primary/15 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                            }`}
+                          >
+                            <GripVertical className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-50 cursor-grab" />
+                            <Icon className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate flex-1">{content?.slideName || content?.title || `Slide ${i + 1}`}</span>
+                            <span className="text-xs opacity-50">{i + 1}</span>
+                          </button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => { e.stopPropagation(); startRename(slide.id, content?.slideName || content?.title || `Slide ${i + 1}`); }}
+                            title="Rename slide"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => { e.stopPropagation(); duplicateSlide(slide.id); }}
+                            title="Duplicate slide"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </Reorder.Item>
                 );
@@ -282,7 +344,83 @@ export default function PackEditor() {
 
         {/* Main Editor */}
         <main className="flex-1 overflow-y-auto">
-          {selectedSlide && slideContent ? (
+          {showPackSettings ? (
+            <div className="p-6 max-w-2xl space-y-6">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <Settings className="w-5 h-5" /> Pack Settings
+              </h2>
+
+              {/* Answer Presentation (pack-level) */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-muted-foreground" /> Answer Presentation (All Slides)
+                </label>
+                <AnswerVisibilityPicker
+                  value={packSettings.answerVisibility || { mode: 'host-only' }}
+                  onChange={(v) => savePackSettings({ ...packSettings, answerVisibility: v })}
+                />
+              </div>
+
+              {/* Theme */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-muted-foreground" /> Theme
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Primary Color</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={packSettings.theme?.primaryColor || '#8B5CF6'}
+                        onChange={(e) => savePackSettings({ ...packSettings, theme: { ...packSettings.theme, primaryColor: e.target.value } })}
+                        className="w-8 h-8 rounded border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={packSettings.theme?.primaryColor || '#8B5CF6'}
+                        onChange={(e) => savePackSettings({ ...packSettings, theme: { ...packSettings.theme, primaryColor: e.target.value } })}
+                        className="bg-muted border-border h-8 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Background Color</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={packSettings.theme?.backgroundColor || '#0F0F23'}
+                        onChange={(e) => savePackSettings({ ...packSettings, theme: { ...packSettings.theme, backgroundColor: e.target.value } })}
+                        className="w-8 h-8 rounded border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={packSettings.theme?.backgroundColor || '#0F0F23'}
+                        onChange={(e) => savePackSettings({ ...packSettings, theme: { ...packSettings.theme, backgroundColor: e.target.value } })}
+                        className="bg-muted border-border h-8 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Font Family</label>
+                  <Select
+                    value={packSettings.theme?.fontFamily || 'default'}
+                    onValueChange={(v) => savePackSettings({ ...packSettings, theme: { ...packSettings.theme, fontFamily: v === 'default' ? undefined : v } })}
+                  >
+                    <SelectTrigger className="bg-muted border-border">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border">
+                      <SelectItem value="default">Default</SelectItem>
+                      <SelectItem value="'Inter', sans-serif">Inter</SelectItem>
+                      <SelectItem value="'Georgia', serif">Georgia (Serif)</SelectItem>
+                      <SelectItem value="'Courier New', monospace">Courier New (Mono)</SelectItem>
+                      <SelectItem value="'Comic Sans MS', cursive">Comic Sans (Fun)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          ) : selectedSlide && slideContent ? (
             <div className="flex h-full">
               {/* Editor Form */}
               <div className="flex-1 p-6 max-w-2xl space-y-6">
@@ -472,17 +610,6 @@ export default function PackEditor() {
                       </p>
                     </div>
                   )}
-                </div>
-
-                {/* Answer Visibility */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                    <Eye className="w-3.5 h-3.5 text-muted-foreground" /> Answer Presentation
-                  </label>
-                  <AnswerVisibilityPicker
-                    value={slideContent.answerVisibility || { mode: 'host-only' }}
-                    onChange={(v) => updateSlideContent(selectedSlide.id, { answerVisibility: v })}
-                  />
                 </div>
 
                 {/* Delete & Duplicate */}

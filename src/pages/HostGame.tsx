@@ -19,17 +19,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
-import type { SlideContent } from '@/lib/slide-templates';
+import type { SlideContent, PackSettings, AnswerVisibility } from '@/lib/slide-templates';
 
 type Slide = Database['public']['Tables']['slides']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
 type Submission = Database['public']['Tables']['submissions']['Row'];
 
-type AnswerVisibility =
-  | { mode: 'host-only' }
-  | { mode: 'fastest'; count: number }
-  | { mode: 'all-anonymous' }
-  | { mode: 'all-named' };
+// Re-export from slide-templates to avoid duplication
+
 
 /* ─── Answer display helper ─── */
 function formatAnswer(sub: Submission): string {
@@ -227,21 +224,28 @@ const HostGame = () => {
 
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loadingSlides, setLoadingSlides] = useState(true);
+  const [packSettings, setPackSettings] = useState<PackSettings>({});
   const [visibility, setVisibility] = useState<AnswerVisibility>({ mode: 'host-only' });
   const [timerActive, setTimerActive] = useState(false);
 
   useEffect(() => {
     if (!room?.current_pack_id) return;
     setLoadingSlides(true);
-    supabase
-      .from('slides')
-      .select('*')
-      .eq('pack_id', room.current_pack_id)
-      .order('order_index')
-      .then(({ data }) => {
-        if (data) setSlides(data);
-        setLoadingSlides(false);
-      });
+    // Load slides and pack settings in parallel
+    Promise.all([
+      supabase.from('slides').select('*').eq('pack_id', room.current_pack_id).order('order_index'),
+      supabase.from('content_packs').select('*').eq('id', room.current_pack_id).single(),
+    ]).then(([slidesRes, packRes]) => {
+      if (slidesRes.data) setSlides(slidesRes.data);
+      if (packRes.data) {
+        const ps = (packRes.data as any).settings as PackSettings | null;
+        if (ps) {
+          setPackSettings(ps);
+          if (ps.answerVisibility) setVisibility(ps.answerVisibility);
+        }
+      }
+      setLoadingSlides(false);
+    });
   }, [room?.current_pack_id]);
 
   const currentSlide = slides[slideIndex] ?? null;
@@ -255,6 +259,7 @@ const HostGame = () => {
   const { remaining, progress } = useCountdown({
     duration: timeLimit && timeLimit > 0 ? timeLimit : null,
     active: timerActive,
+    resetKey: currentSlide?.id ?? '',
   });
 
   // Start timer when slide changes
