@@ -145,7 +145,7 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
                 {content.template === 'information' && (
                   <div className="text-center space-y-3">
                     <Info className="w-12 h-12 text-primary mx-auto" />
-                    {content.body && <p className="text-muted-foreground">{content.body}</p>}
+                    {content.body && <div className="text-muted-foreground prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
                     <p className="text-sm text-muted-foreground">Look at the host screen!</p>
                   </div>
                 )}
