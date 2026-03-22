@@ -194,7 +194,7 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
                 {/* Rating */}
                 {content.template === 'rating' && (
                   <div className="space-y-4">
-                    {content.body && <p className="text-muted-foreground text-center text-sm">{content.body}</p>}
+                    {content.body && <div className="text-muted-foreground text-center text-sm prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
                     <div className="flex justify-center gap-1">
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                         <Star
