@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
-import type { SlideContent } from '@/lib/slide-templates';
+import type { SlideContent, PackSettings, AnswerVisibility } from '@/lib/slide-templates';
 
 type Slide = Database['public']['Tables']['slides']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
