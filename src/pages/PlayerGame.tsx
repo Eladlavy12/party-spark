@@ -65,6 +65,7 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
   const { remaining, progress } = useCountdown({
     duration: timeLimit && timeLimit > 0 ? timeLimit : null,
     active: !submitted && !!content && content.template !== 'information',
+    resetKey: currentSlide?.id ?? '',
   });
 
   const handleSubmit = async (answerData: Record<string, unknown>) => {

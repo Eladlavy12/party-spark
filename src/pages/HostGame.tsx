@@ -258,6 +258,7 @@ const HostGame = () => {
   const { remaining, progress } = useCountdown({
     duration: timeLimit && timeLimit > 0 ? timeLimit : null,
     active: timerActive,
+    resetKey: currentSlide?.id ?? '',
   });
 
   // Start timer when slide changes
