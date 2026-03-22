@@ -52,6 +52,10 @@ export default function PackEditor() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [selectedSlideId, setSelectedSlideId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPackSettings, setShowPackSettings] = useState(false);
+  const [packSettings, setPackSettings] = useState<PackSettings>({});
+  const [renamingSlideId, setRenamingSlideId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const selectedSlide = slides.find((s) => s.id === selectedSlideId) || null;
   const slideContent = selectedSlide ? (selectedSlide.content as unknown as SlideContent) : null;
