@@ -1,0 +1,1 @@
+ALTER TABLE public.content_packs ADD COLUMN IF NOT EXISTS settings jsonb DEFAULT '{}'::jsonb;
