@@ -344,7 +344,83 @@ export default function PackEditor() {
 
         {/* Main Editor */}
         <main className="flex-1 overflow-y-auto">
-          {selectedSlide && slideContent ? (
+          {showPackSettings ? (
+            <div className="p-6 max-w-2xl space-y-6">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <Settings className="w-5 h-5" /> Pack Settings
+              </h2>
+
+              {/* Answer Presentation (pack-level) */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-muted-foreground" /> Answer Presentation (All Slides)
+                </label>
+                <AnswerVisibilityPicker
+                  value={packSettings.answerVisibility || { mode: 'host-only' }}
+                  onChange={(v) => savePackSettings({ ...packSettings, answerVisibility: v })}
+                />
+              </div>
+
+              {/* Theme */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-muted-foreground" /> Theme
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Primary Color</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={packSettings.theme?.primaryColor || '#8B5CF6'}
+                        onChange={(e) => savePackSettings({ ...packSettings, theme: { ...packSettings.theme, primaryColor: e.target.value } })}
+                        className="w-8 h-8 rounded border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={packSettings.theme?.primaryColor || '#8B5CF6'}
+                        onChange={(e) => savePackSettings({ ...packSettings, theme: { ...packSettings.theme, primaryColor: e.target.value } })}
+                        className="bg-muted border-border h-8 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Background Color</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={packSettings.theme?.backgroundColor || '#0F0F23'}
+                        onChange={(e) => savePackSettings({ ...packSettings, theme: { ...packSettings.theme, backgroundColor: e.target.value } })}
+                        className="w-8 h-8 rounded border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={packSettings.theme?.backgroundColor || '#0F0F23'}
+                        onChange={(e) => savePackSettings({ ...packSettings, theme: { ...packSettings.theme, backgroundColor: e.target.value } })}
+                        className="bg-muted border-border h-8 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Font Family</label>
+                  <Select
+                    value={packSettings.theme?.fontFamily || 'default'}
+                    onValueChange={(v) => savePackSettings({ ...packSettings, theme: { ...packSettings.theme, fontFamily: v === 'default' ? undefined : v } })}
+                  >
+                    <SelectTrigger className="bg-muted border-border">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border">
+                      <SelectItem value="default">Default</SelectItem>
+                      <SelectItem value="'Inter', sans-serif">Inter</SelectItem>
+                      <SelectItem value="'Georgia', serif">Georgia (Serif)</SelectItem>
+                      <SelectItem value="'Courier New', monospace">Courier New (Mono)</SelectItem>
+                      <SelectItem value="'Comic Sans MS', cursive">Comic Sans (Fun)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          ) : selectedSlide && slideContent ? (
             <div className="flex h-full">
               {/* Editor Form */}
               <div className="flex-1 p-6 max-w-2xl space-y-6">
