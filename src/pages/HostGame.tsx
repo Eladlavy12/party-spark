@@ -234,7 +234,7 @@ const HostGame = () => {
     // Load slides and pack settings in parallel
     Promise.all([
       supabase.from('slides').select('*').eq('pack_id', room.current_pack_id).order('order_index'),
-      supabase.from('content_packs').select('settings').eq('id', room.current_pack_id).single(),
+      supabase.from('content_packs').select('*').eq('id', room.current_pack_id).single(),
     ]).then(([slidesRes, packRes]) => {
       if (slidesRes.data) setSlides(slidesRes.data);
       if (packRes.data?.settings) {
