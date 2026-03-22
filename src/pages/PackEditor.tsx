@@ -330,12 +330,10 @@ export default function PackEditor() {
                     <label className="text-sm font-medium text-foreground mb-1.5 block">
                       {slideContent.template === 'information' ? 'Body Text' : 'Prompt'}
                     </label>
-                    <Textarea
-                      value={slideContent.body || ''}
-                      onChange={(e) => updateSlideContent(selectedSlide.id, { body: e.target.value })}
+                    <RichTextEditor
+                      content={slideContent.body || ''}
+                      onChange={(html) => updateSlideContent(selectedSlide.id, { body: html })}
                       placeholder={slideContent.template === 'information' ? 'Describe what players should know…' : 'What should players answer/draw?'}
-                      className="bg-muted border-border resize-none"
-                      rows={4}
                     />
                   </div>
                 )}
