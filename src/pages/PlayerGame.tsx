@@ -153,7 +153,7 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
                 {/* Open text */}
                 {content.template === 'open-text' && (
                   <div className="space-y-3">
-                    {content.body && <p className="text-muted-foreground text-center text-sm">{content.body}</p>}
+                    {content.body && <div className="text-muted-foreground text-center text-sm prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
                     <Input
                       placeholder="Type your answer…"
                       value={textAnswer}
