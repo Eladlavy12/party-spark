@@ -228,6 +228,7 @@ const HostGame = () => {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loadingSlides, setLoadingSlides] = useState(true);
   const [visibility, setVisibility] = useState<AnswerVisibility>({ mode: 'host-only' });
+  const [timerActive, setTimerActive] = useState(false);
 
   useEffect(() => {
     if (!room?.current_pack_id) return;
