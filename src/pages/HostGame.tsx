@@ -237,10 +237,12 @@ const HostGame = () => {
       supabase.from('content_packs').select('*').eq('id', room.current_pack_id).single(),
     ]).then(([slidesRes, packRes]) => {
       if (slidesRes.data) setSlides(slidesRes.data);
-      if (packRes.data?.settings) {
-        const ps = packRes.data.settings as unknown as PackSettings;
-        setPackSettings(ps);
-        if (ps.answerVisibility) setVisibility(ps.answerVisibility);
+      if (packRes.data) {
+        const ps = (packRes.data as any).settings as PackSettings | null;
+        if (ps) {
+          setPackSettings(ps);
+          if (ps.answerVisibility) setVisibility(ps.answerVisibility);
+        }
       }
       setLoadingSlides(false);
     });
