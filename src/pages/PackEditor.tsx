@@ -171,6 +171,22 @@ export default function PackEditor() {
     await Promise.all(updated.map((s) => supabase.from('slides').update({ order_index: s.order_index }).eq('id', s.id)));
   }
 
+  async function savePackSettings(ps: PackSettings) {
+    if (!pack) return;
+    setPackSettings(ps);
+    await supabase.from('content_packs').update({ settings: ps as any }).eq('id', pack.id);
+  }
+
+  function startRename(slideId: string, currentName: string) {
+    setRenamingSlideId(slideId);
+    setRenameValue(currentName);
+  }
+
+  function confirmRename(slideId: string) {
+    updateSlideContent(slideId, { slideName: renameValue.trim() || undefined });
+    setRenamingSlideId(null);
+  }
+
   async function togglePublish() {
     if (!pack) return;
     const newVal = !pack.is_published;
