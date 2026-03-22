@@ -3,12 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useRoom, usePlayers } from '@/hooks/use-realtime';
 import { useBuzzes } from '@/hooks/use-buzzer';
 import { useSubmissions } from '@/hooks/use-submissions';
+import { useCountdown } from '@/hooks/use-countdown';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2, Users, ChevronRight, ChevronLeft, Bell, Trash2,
   Trophy, Clock, Info, MessageSquare, CheckSquare, Star, Pencil,
   Eye, EyeOff, ListOrdered, UserRound,
 } from 'lucide-react';
+import { CountdownTimer } from '@/components/CountdownTimer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
