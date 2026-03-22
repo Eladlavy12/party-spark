@@ -227,7 +227,6 @@ const HostGame = () => {
   const [packSettings, setPackSettings] = useState<PackSettings>({});
   const [visibility, setVisibility] = useState<AnswerVisibility>({ mode: 'host-only' });
   const [timerActive, setTimerActive] = useState(false);
-  const [timerActive, setTimerActive] = useState(false);
 
   useEffect(() => {
     if (!room?.current_pack_id) return;
