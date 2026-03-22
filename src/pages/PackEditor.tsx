@@ -70,7 +70,11 @@ export default function PackEditor() {
       supabase.from('content_packs').select('*').eq('id', packId!).single(),
       supabase.from('slides').select('*').eq('pack_id', packId!).order('order_index'),
     ]);
-    if (packRes.data) setPack(packRes.data);
+    if (packRes.data) {
+      setPack(packRes.data);
+      const ps = (packRes.data as any).settings as PackSettings | null;
+      if (ps) setPackSettings(ps);
+    }
     if (slidesRes.data) {
       setSlides(slidesRes.data);
       if (slidesRes.data.length > 0 && !selectedSlideId) {
