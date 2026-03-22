@@ -49,13 +49,26 @@ export type AnswerVisibility =
 export interface SlideContent {
   template: SlideTemplate;
   title: string;
+  slideName?: string; // custom display name for sidebar
   body?: string;
   mediaUrl?: string;
   options?: string[]; // for multiple-choice
   correctOptionIndex?: number;
   buzzerEnabled?: boolean;
-  buzzerMode?: 'first' | 'all'; // 'first' = first-buzz-wins, 'all' = everyone can buzz
+  buzzerMode?: 'first' | 'all';
   answerVisibility?: AnswerVisibility;
+}
+
+/** Pack-level settings stored in content_packs.settings (jsonb) */
+export interface PackSettings {
+  answerVisibility?: AnswerVisibility;
+  theme?: PackTheme;
+}
+
+export interface PackTheme {
+  primaryColor?: string;   // hex
+  backgroundColor?: string; // hex
+  fontFamily?: string;
 }
 
 export function getDefaultContent(template: SlideTemplate): SlideContent {

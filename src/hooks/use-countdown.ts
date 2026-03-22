@@ -7,15 +7,17 @@ interface UseCountdownOptions {
   active: boolean;
   /** Called when timer reaches 0 */
   onExpire?: () => void;
+  /** Change this to force a timer reset (e.g. slide id) */
+  resetKey?: string | number;
 }
 
-export function useCountdown({ duration, active, onExpire }: UseCountdownOptions) {
+export function useCountdown({ duration, active, onExpire, resetKey }: UseCountdownOptions) {
   const [remaining, setRemaining] = useState(duration ?? 0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onExpireRef = useRef(onExpire);
   onExpireRef.current = onExpire;
 
-  // Reset when duration or active changes
+  // Reset when duration, active, or resetKey changes
   useEffect(() => {
     if (!active || !duration || duration <= 0) {
       setRemaining(duration ?? 0);
@@ -34,12 +36,12 @@ export function useCountdown({ duration, active, onExpire }: UseCountdownOptions
         if (intervalRef.current) clearInterval(intervalRef.current);
         onExpireRef.current?.();
       }
-    }, 250); // update 4x/sec for smooth display
+    }, 250);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [duration, active]);
+  }, [duration, active, resetKey]);
 
   const progress = duration && duration > 0 ? remaining / duration : 0;
 
