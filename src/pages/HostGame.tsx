@@ -3,12 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useRoom, usePlayers } from '@/hooks/use-realtime';
 import { useBuzzes } from '@/hooks/use-buzzer';
 import { useSubmissions } from '@/hooks/use-submissions';
+import { useCountdown } from '@/hooks/use-countdown';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2, Users, ChevronRight, ChevronLeft, Bell, Trash2,
   Trophy, Clock, Info, MessageSquare, CheckSquare, Star, Pencil,
   Eye, EyeOff, ListOrdered, UserRound,
 } from 'lucide-react';
+import { CountdownTimer } from '@/components/CountdownTimer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -226,6 +228,7 @@ const HostGame = () => {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loadingSlides, setLoadingSlides] = useState(true);
   const [visibility, setVisibility] = useState<AnswerVisibility>({ mode: 'host-only' });
+  const [timerActive, setTimerActive] = useState(false);
 
   useEffect(() => {
     if (!room?.current_pack_id) return;
@@ -246,6 +249,22 @@ const HostGame = () => {
   const isLast = slideIndex >= slides.length - 1;
 
   const submissions = useSubmissions(room?.id ?? null, currentSlide?.id ?? null);
+
+  // Countdown timer
+  const timeLimit = currentSlide?.time_limit;
+  const { remaining, progress } = useCountdown({
+    duration: timeLimit && timeLimit > 0 ? timeLimit : null,
+    active: timerActive,
+  });
+
+  // Start timer when slide changes
+  useEffect(() => {
+    if (currentSlide?.time_limit && currentSlide.time_limit > 0) {
+      setTimerActive(true);
+    } else {
+      setTimerActive(false);
+    }
+  }, [slideIndex, currentSlide?.id]);
 
   const goToSlide = async (index: number) => {
     if (!room) return;
@@ -323,7 +342,7 @@ const HostGame = () => {
                 <h2 className="text-4xl font-bold text-foreground mb-4">{content.title || 'Untitled Slide'}</h2>
 
                 {content.body && (
-                  <p className="text-xl text-muted-foreground mb-6 max-w-xl mx-auto">{content.body}</p>
+                  <div className="text-xl text-muted-foreground mb-6 max-w-xl mx-auto prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />
                 )}
 
                 {content.mediaUrl && (
@@ -373,13 +392,15 @@ const HostGame = () => {
                   </motion.div>
                 )}
 
+                {/* Countdown Timer */}
+                {timerActive && timeLimit && timeLimit > 0 && (
+                  <div className="mt-6">
+                    <CountdownTimer remaining={remaining} progress={progress} size="lg" />
+                  </div>
+                )}
+
                 {/* Slide meta */}
-                <div className="mt-8 flex items-center justify-center gap-6 text-muted-foreground text-sm">
-                  {currentSlide!.time_limit && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" /> {currentSlide!.time_limit}s
-                    </span>
-                  )}
+                <div className="mt-4 flex items-center justify-center gap-6 text-muted-foreground text-sm">
                   {currentSlide!.points_possible && currentSlide!.points_possible > 0 && (
                     <span className="flex items-center gap-1">
                       <Trophy className="w-4 h-4" /> {currentSlide!.points_possible} pts

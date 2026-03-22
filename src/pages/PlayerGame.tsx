@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useRoom, usePlayers } from '@/hooks/use-realtime';
 import { useBuzzes } from '@/hooks/use-buzzer';
+import { useCountdown } from '@/hooks/use-countdown';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gamepad2, Bell, Send, Star, Pencil, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
+import { CountdownTimer } from '@/components/CountdownTimer';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { SlideContent } from '@/lib/slide-templates';
@@ -56,6 +58,14 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
 
   const currentSlide = slides[slideIndex] ?? null;
   const content = currentSlide ? (currentSlide.content as unknown as SlideContent) : null;
+  const hasPoints = currentSlide?.points_possible != null && currentSlide.points_possible > 0;
+
+  // Countdown
+  const timeLimit = currentSlide?.time_limit;
+  const { remaining, progress } = useCountdown({
+    duration: timeLimit && timeLimit > 0 ? timeLimit : null,
+    active: !submitted && !!content && content.template !== 'information',
+  });
 
   const handleSubmit = async (answerData: Record<string, unknown>) => {
     if (!room || !currentSlide) return;
@@ -99,11 +109,14 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background p-4">
-      {/* Slide indicator */}
-      <div className="text-center mb-4">
+      {/* Slide indicator + timer */}
+      <div className="flex items-center justify-between mb-4 px-2">
         <span className="text-xs text-muted-foreground">
           Slide {slideIndex + 1} / {slides.length}
         </span>
+        {timeLimit && timeLimit > 0 && !submitted && content?.template !== 'information' && (
+          <CountdownTimer remaining={remaining} progress={progress} size="sm" />
+        )}
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center">
@@ -132,7 +145,7 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
                 {content.template === 'information' && (
                   <div className="text-center space-y-3">
                     <Info className="w-12 h-12 text-primary mx-auto" />
-                    {content.body && <p className="text-muted-foreground">{content.body}</p>}
+                    {content.body && <div className="text-muted-foreground prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
                     <p className="text-sm text-muted-foreground">Look at the host screen!</p>
                   </div>
                 )}
@@ -140,7 +153,7 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
                 {/* Open text */}
                 {content.template === 'open-text' && (
                   <div className="space-y-3">
-                    {content.body && <p className="text-muted-foreground text-center text-sm">{content.body}</p>}
+                    {content.body && <div className="text-muted-foreground text-center text-sm prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
                     <Input
                       placeholder="Type your answer…"
                       value={textAnswer}
@@ -181,7 +194,7 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
                 {/* Rating */}
                 {content.template === 'rating' && (
                   <div className="space-y-4">
-                    {content.body && <p className="text-muted-foreground text-center text-sm">{content.body}</p>}
+                    {content.body && <div className="text-muted-foreground text-center text-sm prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
                     <div className="flex justify-center gap-1">
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                         <Star
@@ -209,7 +222,7 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
                 {/* Drawing */}
                 {content.template === 'drawing' && (
                   <div className="space-y-3 text-center">
-                    {content.body && <p className="text-muted-foreground text-sm">{content.body}</p>}
+                    {content.body && <div className="text-muted-foreground text-sm prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
                     <div className="bg-muted rounded-2xl aspect-square w-full border border-dashed border-border flex items-center justify-center">
                       <Pencil className="w-10 h-10 text-muted-foreground/30" />
                     </div>

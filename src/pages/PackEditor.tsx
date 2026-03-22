@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -329,12 +330,10 @@ export default function PackEditor() {
                     <label className="text-sm font-medium text-foreground mb-1.5 block">
                       {slideContent.template === 'information' ? 'Body Text' : 'Prompt'}
                     </label>
-                    <Textarea
-                      value={slideContent.body || ''}
-                      onChange={(e) => updateSlideContent(selectedSlide.id, { body: e.target.value })}
+                    <RichTextEditor
+                      content={slideContent.body || ''}
+                      onChange={(html) => updateSlideContent(selectedSlide.id, { body: html })}
                       placeholder={slideContent.template === 'information' ? 'Describe what players should know…' : 'What should players answer/draw?'}
-                      className="bg-muted border-border resize-none"
-                      rows={4}
                     />
                   </div>
                 )}
@@ -681,14 +680,18 @@ function MobilePreview({ slide, content }: { slide: Slide; content: SlideContent
 
       {/* Bottom bar */}
       <div className="h-5 bg-card flex items-center justify-center gap-3">
-        <div className="flex items-center gap-0.5 text-muted-foreground">
-          <Clock className="w-2.5 h-2.5" />
-          <span className="text-[7px]">{slide.time_limit || 30}s</span>
-        </div>
-        <div className="flex items-center gap-0.5 text-muted-foreground">
-          <Award className="w-2.5 h-2.5" />
-          <span className="text-[7px]">{slide.points_possible || 100}pt</span>
-        </div>
+        {slide.time_limit != null && slide.time_limit > 0 && (
+          <div className="flex items-center gap-0.5 text-muted-foreground">
+            <Clock className="w-2.5 h-2.5" />
+            <span className="text-[7px]">{slide.time_limit}s</span>
+          </div>
+        )}
+        {slide.points_possible != null && slide.points_possible > 0 && (
+          <div className="flex items-center gap-0.5 text-muted-foreground">
+            <Award className="w-2.5 h-2.5" />
+            <span className="text-[7px]">{slide.points_possible}pt</span>
+          </div>
+        )}
         {content.buzzerEnabled && (
           <div className="flex items-center gap-0.5 text-destructive">
             <Bell className="w-2.5 h-2.5" />
