@@ -392,13 +392,15 @@ const HostGame = () => {
                   </motion.div>
                 )}
 
+                {/* Countdown Timer */}
+                {timerActive && timeLimit && timeLimit > 0 && (
+                  <div className="mt-6">
+                    <CountdownTimer remaining={remaining} progress={progress} size="lg" />
+                  </div>
+                )}
+
                 {/* Slide meta */}
-                <div className="mt-8 flex items-center justify-center gap-6 text-muted-foreground text-sm">
-                  {currentSlide!.time_limit && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" /> {currentSlide!.time_limit}s
-                    </span>
-                  )}
+                <div className="mt-4 flex items-center justify-center gap-6 text-muted-foreground text-sm">
                   {currentSlide!.points_possible && currentSlide!.points_possible > 0 && (
                     <span className="flex items-center gap-1">
                       <Trophy className="w-4 h-4" /> {currentSlide!.points_possible} pts
