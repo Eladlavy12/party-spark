@@ -239,6 +239,14 @@ export default function PackEditor() {
               </Badge>
             )}
             <Button
+              variant={showPackSettings ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => { setShowPackSettings(!showPackSettings); setSelectedSlideId(showPackSettings ? (slides[0]?.id ?? null) : null); }}
+              className="gap-1.5"
+            >
+              <Settings className="w-3.5 h-3.5" /> Settings
+            </Button>
+            <Button
               variant={pack.is_published ? 'outline' : 'hero'}
               size="sm"
               onClick={togglePublish}
