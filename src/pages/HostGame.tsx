@@ -25,11 +25,8 @@ type Slide = Database['public']['Tables']['slides']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
 type Submission = Database['public']['Tables']['submissions']['Row'];
 
-type AnswerVisibility =
-  | { mode: 'host-only' }
-  | { mode: 'fastest'; count: number }
-  | { mode: 'all-anonymous' }
-  | { mode: 'all-named' };
+// Re-export from slide-templates to avoid duplication
+
 
 /* ─── Answer display helper ─── */
 function formatAnswer(sub: Submission): string {
