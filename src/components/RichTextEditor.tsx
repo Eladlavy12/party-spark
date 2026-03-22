@@ -3,12 +3,11 @@ import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import { TextStyle } from '@tiptap/extension-text-style';
-import { useEffect } from 'react';
+import { useEffect, useCallback, useId } from 'react';
 import {
   Bold, Italic, Underline as UnderlineIcon, AlignLeft, AlignCenter,
-  AlignRight, Pilcrow, Heading1, Heading2, List, ListOrdered,
+  AlignRight, Heading1, Heading2, List, ListOrdered,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -40,6 +39,8 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange, placeholder, dir }: RichTextEditorProps) {
+  const editorId = useId();
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -61,6 +62,7 @@ export function RichTextEditor({ content, onChange, placeholder, dir }: RichText
         class:
           'prose prose-sm dark:prose-invert max-w-none min-h-[120px] px-3 py-2 focus:outline-none text-foreground',
         dir: dir || 'ltr',
+        'data-editor-id': editorId,
       },
     },
   });
@@ -81,11 +83,28 @@ export function RichTextEditor({ content, onChange, placeholder, dir }: RichText
             class:
               'prose prose-sm dark:prose-invert max-w-none min-h-[120px] px-3 py-2 focus:outline-none text-foreground',
             dir: dir || 'ltr',
+            'data-editor-id': editorId,
           },
         },
       });
     }
   }, [dir, editor]);
+
+  const setDir = useCallback((d: 'ltr' | 'rtl') => {
+    if (!editor) return;
+    const el = document.querySelector(`[data-editor-id="${editorId}"]`) as HTMLElement | null;
+    if (el) el.dir = d;
+    editor.setOptions({
+      editorProps: {
+        attributes: {
+          class: 'prose prose-sm dark:prose-invert max-w-none min-h-[120px] px-3 py-2 focus:outline-none text-foreground',
+          dir: d,
+          'data-editor-id': editorId,
+        },
+      },
+    });
+    editor.chain().focus().setTextAlign(d === 'rtl' ? 'right' : 'left').run();
+  }, [editor, editorId]);
 
   if (!editor) return null;
 
@@ -206,30 +225,24 @@ export function RichTextEditor({ content, onChange, placeholder, dir }: RichText
         <Separator orientation="vertical" className="h-5 mx-0.5" />
 
         {/* Direction buttons */}
-        <Button
-          variant="ghost"
+        <Toggle
           size="sm"
+          pressed={false}
+          onPressedChange={() => setDir('ltr')}
           className="h-7 px-1.5 text-[10px] font-bold"
-          onClick={() => {
-            const el = document.querySelector('.ProseMirror');
-            if (el) (el as HTMLElement).dir = 'ltr';
-          }}
-          title="Left-to-Right"
+          aria-label="Left-to-Right"
         >
           LTR
-        </Button>
-        <Button
-          variant="ghost"
+        </Toggle>
+        <Toggle
           size="sm"
+          pressed={false}
+          onPressedChange={() => setDir('rtl')}
           className="h-7 px-1.5 text-[10px] font-bold"
-          onClick={() => {
-            const el = document.querySelector('.ProseMirror');
-            if (el) (el as HTMLElement).dir = 'rtl';
-          }}
-          title="Right-to-Left"
+          aria-label="Right-to-Left"
         >
           RTL
-        </Button>
+        </Toggle>
 
         <Separator orientation="vertical" className="h-5 mx-0.5" />
 
