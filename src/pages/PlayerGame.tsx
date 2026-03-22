@@ -222,7 +222,7 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
                 {/* Drawing */}
                 {content.template === 'drawing' && (
                   <div className="space-y-3 text-center">
-                    {content.body && <p className="text-muted-foreground text-sm">{content.body}</p>}
+                    {content.body && <div className="text-muted-foreground text-sm prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
                     <div className="bg-muted rounded-2xl aspect-square w-full border border-dashed border-border flex items-center justify-center">
                       <Pencil className="w-10 h-10 text-muted-foreground/30" />
                     </div>
