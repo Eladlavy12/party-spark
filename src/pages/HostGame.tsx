@@ -342,7 +342,7 @@ const HostGame = () => {
                 <h2 className="text-4xl font-bold text-foreground mb-4">{content.title || 'Untitled Slide'}</h2>
 
                 {content.body && (
-                  <p className="text-xl text-muted-foreground mb-6 max-w-xl mx-auto">{content.body}</p>
+                  <div className="text-xl text-muted-foreground mb-6 max-w-xl mx-auto prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />
                 )}
 
                 {content.mediaUrl && (
