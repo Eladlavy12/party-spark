@@ -58,6 +58,14 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
 
   const currentSlide = slides[slideIndex] ?? null;
   const content = currentSlide ? (currentSlide.content as unknown as SlideContent) : null;
+  const hasPoints = currentSlide?.points_possible != null && currentSlide.points_possible > 0;
+
+  // Countdown
+  const timeLimit = currentSlide?.time_limit;
+  const { remaining, progress } = useCountdown({
+    duration: timeLimit && timeLimit > 0 ? timeLimit : null,
+    active: !submitted && !!content && content.template !== 'information',
+  });
 
   const handleSubmit = async (answerData: Record<string, unknown>) => {
     if (!room || !currentSlide) return;
