@@ -61,7 +61,7 @@ export function RichTextEditor({ content, onChange, placeholder, dir }: RichText
       attributes: {
         class:
           'prose prose-sm dark:prose-invert max-w-none min-h-[120px] px-3 py-2 focus:outline-none text-foreground',
-        dir: dir || 'ltr',
+        dir: dir || 'auto',
         'data-editor-id': editorId,
       },
     },
@@ -82,7 +82,7 @@ export function RichTextEditor({ content, onChange, placeholder, dir }: RichText
           attributes: {
             class:
               'prose prose-sm dark:prose-invert max-w-none min-h-[120px] px-3 py-2 focus:outline-none text-foreground',
-            dir: dir || 'ltr',
+            dir: dir || 'auto',
             'data-editor-id': editorId,
           },
         },
@@ -98,7 +98,7 @@ export function RichTextEditor({ content, onChange, placeholder, dir }: RichText
       editorProps: {
         attributes: {
           class: 'prose prose-sm dark:prose-invert max-w-none min-h-[120px] px-3 py-2 focus:outline-none text-foreground',
-          dir: d,
+          dir: d || 'auto',
           'data-editor-id': editorId,
         },
       },
@@ -122,7 +122,7 @@ export function RichTextEditor({ content, onChange, placeholder, dir }: RichText
       <div className="flex items-center gap-0.5 flex-wrap px-1.5 py-1 border-b border-border bg-card/50">
         {/* Font size */}
         <Select
-          value="default"
+          value={editor.getAttributes('textStyle').fontSize || 'default'}
           onValueChange={setFontSize}
         >
           <SelectTrigger className="h-7 w-20 text-xs bg-transparent border-none shadow-none">
@@ -130,11 +130,17 @@ export function RichTextEditor({ content, onChange, placeholder, dir }: RichText
           </SelectTrigger>
           <SelectContent className="bg-card border-border">
             <SelectItem value="default">Normal</SelectItem>
-            <SelectItem value="12">Small</SelectItem>
-            <SelectItem value="16">Medium</SelectItem>
-            <SelectItem value="20">Large</SelectItem>
-            <SelectItem value="24">XL</SelectItem>
-            <SelectItem value="32">XXL</SelectItem>
+            <SelectItem value="10">10px</SelectItem>
+            <SelectItem value="12">12px</SelectItem>
+            <SelectItem value="14">14px</SelectItem>
+            <SelectItem value="16">16px</SelectItem>
+            <SelectItem value="18">18px</SelectItem>
+            <SelectItem value="20">20px</SelectItem>
+            <SelectItem value="24">24px</SelectItem>
+            <SelectItem value="32">32px</SelectItem>
+            <SelectItem value="40">40px</SelectItem>
+            <SelectItem value="48">48px</SelectItem>
+            <SelectItem value="64">64px</SelectItem>
           </SelectContent>
         </Select>
 

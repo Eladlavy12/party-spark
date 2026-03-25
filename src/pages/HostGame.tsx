@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2, Users, ChevronRight, ChevronLeft, Bell, Trash2,
   Trophy, Clock, Info, MessageSquare, CheckSquare, Star, Pencil,
-  Eye, EyeOff, ListOrdered, UserRound,
+  Eye, EyeOff, ListOrdered, UserRound, Monitor,
 } from 'lucide-react';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { SlideContent, PackSettings, AnswerVisibility } from '@/lib/slide-templates';
+import { Scoreboard } from '@/components/Scoreboard';
 
 type Slide = Database['public']['Tables']['slides']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
@@ -316,6 +317,16 @@ const HostGame = () => {
             <Users className="w-4 h-4" />
             <span>{players.length}</span>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(`/host/${code}/display`, '_blank', 'width=1280,height=720')}
+            className="text-muted-foreground gap-1.5"
+            title="Open TV screen window"
+          >
+            <Monitor className="w-3.5 h-3.5" />
+            TV Screen
+          </Button>
           <Button variant="ghost" size="sm" onClick={endGame} className="text-muted-foreground">
             End Game
           </Button>
@@ -342,6 +353,7 @@ const HostGame = () => {
                   {content.template === 'multiple-choice' && <CheckSquare className="w-10 h-10 text-primary mx-auto" />}
                   {content.template === 'rating' && <Star className="w-10 h-10 text-primary mx-auto" />}
                   {content.template === 'drawing' && <Pencil className="w-10 h-10 text-primary mx-auto" />}
+                  {content.template === 'end-game' && <Trophy className="w-16 h-16 text-yellow-400 mx-auto" />}
                 </div>
 
                 <h2 className="text-4xl font-bold text-foreground mb-4">{content.title || 'Untitled Slide'}</h2>
@@ -376,8 +388,8 @@ const HostGame = () => {
                   </div>
                 )}
 
-                {/* Presented answers (non host-only) */}
-                {visibility.mode !== 'host-only' && submissions.length > 0 && (
+                {/* Host always sees submissions in central view too */}
+                {content.template !== 'end-game' && submissions.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -387,24 +399,30 @@ const HostGame = () => {
                       <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                         <MessageSquare className="w-4 h-4 text-primary" />
                         Answers ({submissions.length})
+                        {visibility.mode === 'host-only' && (
+                          <span className="text-[10px] font-normal text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
+                            Hidden on TV
+                          </span>
+                        )}
                       </h4>
                       <SubmissionsPanel
                         submissions={submissions}
                         players={players}
-                        visibility={visibility}
+                        visibility={{ mode: 'all-named' }}
                       />
                     </div>
                   </motion.div>
                 )}
 
                 {/* Countdown Timer */}
-                {timerActive && timeLimit && timeLimit > 0 && (
+                {content.template !== 'end-game' && timerActive && timeLimit && timeLimit > 0 && (
                   <div className="mt-6">
                     <CountdownTimer remaining={remaining} progress={progress} size="lg" />
                   </div>
                 )}
 
                 {/* Slide meta */}
+                {content.template !== 'end-game' && (
                 <div className="mt-4 flex items-center justify-center gap-6 text-muted-foreground text-sm">
                   {currentSlide!.points_possible && currentSlide!.points_possible > 0 && (
                     <span className="flex items-center gap-1">
@@ -417,6 +435,25 @@ const HostGame = () => {
                     </span>
                   )}
                 </div>
+                )}
+
+                {/* Scoreboard for End Game */}
+                {content.template === 'end-game' && content.showScoreboard && (
+                  <motion.div
+                     initial={{ opacity: 0, scale: 0.9 }}
+                     animate={{ opacity: 1, scale: 1 }}
+                     transition={{ delay: 0.2 }}
+                     className="mt-8 w-full max-w-4xl mx-auto overflow-visible px-4"
+                  >
+                    <Scoreboard
+                      roomId={room.id}
+                      players={players}
+                      sortBy={content.scoreboardSortBy}
+                      type={content.scoreboardType}
+                      limit={content.scoreboardLimit}
+                    />
+                  </motion.div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -445,9 +482,9 @@ const HostGame = () => {
         </main>
 
         {/* Sidebar */}
-        <aside className="w-72 border-l border-border bg-card/30 flex flex-col shrink-0 overflow-y-auto">
+        <aside className="w-72 border-l border-border bg-card/30 flex flex-col shrink-0 overflow-y-auto z-10">
           {/* Answer visibility + Submissions (host always sees) */}
-          {content && content.template !== 'information' && (
+          {content && content.template !== 'information' && content.template !== 'end-game' && (
             <div className="p-4 border-b border-border">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-foreground font-semibold text-sm flex items-center gap-1.5">
@@ -465,7 +502,7 @@ const HostGame = () => {
           )}
 
           {/* Buzzes */}
-          {content?.buzzerEnabled && (
+          {content?.template !== 'end-game' && content?.buzzerEnabled && (
             <div className="p-4 border-b border-border">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-foreground font-semibold text-sm flex items-center gap-1.5">
@@ -483,16 +520,23 @@ const HostGame = () => {
                 <div className="space-y-1.5">
                   {buzzes.map((buzz, i) => {
                     const player = players.find((p) => p.id === buzz.player_id);
+                    const isFirst = i === 0;
+                    const timeDiff = isFirst ? 0 : (new Date(buzz.buzzed_at).getTime() - new Date(buzzes[0].buzzed_at).getTime()) / 1000;
+                    
                     return (
-                      <div key={buzz.id} className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
-                        <span className={`text-xs font-bold ${i === 0 ? 'text-accent' : 'text-muted-foreground'}`}>#{i + 1}</span>
-                        <div
-                          className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0"
-                          style={{ backgroundColor: player?.avatar_color ?? '#FF6B6B', color: '#1a1a2e' }}
-                        >
-                          {player?.nickname.charAt(0).toUpperCase() ?? '?'}
+                      <div key={buzz.id} className={`flex items-center gap-2 rounded-lg px-3 py-1.5 border ${isFirst ? 'bg-primary/10 border-primary/20' : 'bg-muted/50 border-transparent'}`}>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className={`text-[10px] font-mono font-bold ${isFirst ? 'text-primary' : 'text-muted-foreground'}`}>
+                            {isFirst ? 'FASTEST' : `+${timeDiff.toFixed(2)}s`}
+                          </span>
+                          <div
+                            className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0"
+                            style={{ backgroundColor: player?.avatar_color ?? '#FF6B6B', color: '#1a1a2e' }}
+                          >
+                            {player?.nickname.charAt(0).toUpperCase() ?? '?'}
+                          </div>
+                          <span className="text-foreground text-xs font-medium truncate">{player?.nickname ?? 'Unknown'}</span>
                         </div>
-                        <span className="text-foreground text-xs font-medium truncate">{player?.nickname ?? 'Unknown'}</span>
                       </div>
                     );
                   })}

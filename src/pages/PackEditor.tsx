@@ -5,8 +5,9 @@ import {
   ArrowLeft, Plus, Trash2, GripVertical, Save, Clock, Award,
   Info, MessageSquare, CheckSquare, Star, Pencil, Smartphone, Loader2,
   Bell, BellOff, Globe, GlobeLock, Copy, Eye, EyeOff, ListOrdered, UserRound,
-  Settings, Palette, Edit3, Check, X,
+  Settings, Palette, Edit3, Check, X, Trophy, Type, SlidersHorizontal, Upload, Video, Image as ImageIcon
 } from 'lucide-react';
+import { MediaPlayer } from '@/components/MediaPlayer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -37,10 +38,13 @@ type ContentPack = Database['public']['Tables']['content_packs']['Row'];
 
 const TEMPLATE_ICONS: Record<SlideTemplate, React.ElementType> = {
   information: Info,
+  'text-card': Type,
   'open-text': MessageSquare,
   'multiple-choice': CheckSquare,
+  slider: SlidersHorizontal,
   rating: Star,
   drawing: Pencil,
+  'end-game': Trophy,
 };
 
 export default function PackEditor() {
@@ -200,6 +204,39 @@ export default function PackEditor() {
     }
   }
 
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !selectedSlideId) return;
+
+    try {
+      setLoading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `slide-media/${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('media') // Assuming 'media' bucket exists
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+
+      updateSlideContent(selectedSlideId, { mediaUrl: publicUrl });
+      toast({ title: 'Media uploaded successfully' });
+    } catch (error: any) {
+      toast({ 
+        title: 'Upload failed', 
+        description: error.message || 'Make sure a "media" bucket exists in your Supabase storage.',
+        variant: 'destructive' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -238,6 +275,14 @@ export default function PackEditor() {
                 <Save className="w-3 h-3" /> Saved
               </Badge>
             )}
+            <Button
+              variant="hero"
+              size="sm"
+              onClick={() => window.open(`/studio/${packId}/preview`, '_blank')}
+              className="gap-1.5"
+            >
+              <Eye className="w-3.5 h-3.5" /> Preview
+            </Button>
             <Button
               variant={showPackSettings ? 'default' : 'ghost'}
               size="sm"
@@ -462,16 +507,22 @@ export default function PackEditor() {
                   />
                 </div>
 
-                {/* Body / Prompt (for information & open-text) */}
-                {(slideContent.template === 'information' || slideContent.template === 'open-text' || slideContent.template === 'rating' || slideContent.template === 'drawing') && (
+                {/* Body / Prompt (for information & open-text & end-game & text-card & slider) */}
+                {(slideContent.template === 'information' || slideContent.template === 'text-card' || slideContent.template === 'open-text' || slideContent.template === 'rating' || slideContent.template === 'drawing' || slideContent.template === 'end-game' || slideContent.template === 'slider') && (
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1.5 block">
-                      {slideContent.template === 'information' ? 'Body Text' : 'Prompt'}
+                      {slideContent.template === 'information' || slideContent.template === 'text-card' ? 'Body Text' : slideContent.template === 'end-game' ? 'End Game Message' : 'Prompt'}
                     </label>
                     <RichTextEditor
                       content={slideContent.body || ''}
                       onChange={(html) => updateSlideContent(selectedSlide.id, { body: html })}
-                      placeholder={slideContent.template === 'information' ? 'Describe what players should know…' : 'What should players answer/draw?'}
+                      placeholder={
+                        slideContent.template === 'information' || slideContent.template === 'text-card' 
+                          ? 'Describe what players should know…' 
+                          : slideContent.template === 'end-game' 
+                            ? 'Say goodbye or announce winners…' 
+                            : 'What should players answer/draw?'
+                      }
                     />
                   </div>
                 )}
@@ -514,18 +565,127 @@ export default function PackEditor() {
                   </div>
                 )}
 
+                {/* Slider Config */}
+                {slideContent.template === 'slider' && (
+                  <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-xl border border-border">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Min Value</label>
+                      <Input
+                        type="number"
+                        value={slideContent.sliderMin ?? 0}
+                        onChange={(e) => updateSlideContent(selectedSlide.id, { sliderMin: parseInt(e.target.value) || 0 })}
+                        className="h-8 bg-muted border-border"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Max Value</label>
+                      <Input
+                        type="number"
+                        value={slideContent.sliderMax ?? 100}
+                        onChange={(e) => updateSlideContent(selectedSlide.id, { sliderMax: parseInt(e.target.value) || 0 })}
+                        className="h-8 bg-muted border-border"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Step</label>
+                      <Input
+                        type="number"
+                        value={slideContent.sliderStep ?? 1}
+                        onChange={(e) => updateSlideContent(selectedSlide.id, { sliderStep: parseInt(e.target.value) || 1 })}
+                        className="h-8 bg-muted border-border"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Media URL */}
                 <div>
                   <label className="text-sm font-medium text-foreground mb-1.5 block">Media URL (optional)</label>
-                  <Input
-                    value={slideContent.mediaUrl || ''}
-                    onChange={(e) => updateSlideContent(selectedSlide.id, { mediaUrl: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
-                    className="bg-muted border-border"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={slideContent.mediaUrl || ''}
+                      onChange={(e) => updateSlideContent(selectedSlide.id, { mediaUrl: e.target.value })}
+                      placeholder="https://example.com/image.jpg"
+                      className="bg-muted border-border"
+                    />
+                    <div className="relative">
+                      <Button variant="outline" size="icon" className="shrink-0">
+                        <Upload className="w-4 h-4" />
+                      </Button>
+                      <input
+                        type="file"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        accept="image/*,video/*"
+                        onChange={handleFileUpload}
+                      />
+                    </div>
+                  </div>
                 </div>
 
+                {/* End Game Scoreboard Settings */}
+                {slideContent.template === 'end-game' && (
+                  <div className="space-y-4 border-t border-border pt-4">
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                      <Trophy className="w-4 h-4 text-neon-yellow" /> Scoreboard Settings
+                    </h3>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-foreground">Show Scoreboard</label>
+                      <Switch
+                        checked={slideContent.showScoreboard ?? false}
+                        onCheckedChange={(v) => updateSlideContent(selectedSlide.id, { showScoreboard: v })}
+                      />
+                    </div>
+                    {slideContent.showScoreboard && (
+                      <div className="space-y-3 pl-4 border-l-2 border-border/50">
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">Sort By</label>
+                          <Select
+                            value={slideContent.scoreboardSortBy || 'score'}
+                            onValueChange={(v) => updateSlideContent(selectedSlide.id, { scoreboardSortBy: v as 'score' | 'fastest-buzzer' })}
+                          >
+                            <SelectTrigger className="bg-muted border-border">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card border-border">
+                              <SelectItem value="score">Overall Score</SelectItem>
+                              <SelectItem value="fastest-buzzer">Fastest Buzzer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">Display Format</label>
+                          <Select
+                            value={slideContent.scoreboardType || 'list'}
+                            onValueChange={(v) => updateSlideContent(selectedSlide.id, { scoreboardType: v as 'list' | 'grid' | 'podium' })}
+                          >
+                            <SelectTrigger className="bg-muted border-border">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card border-border">
+                              <SelectItem value="list">List</SelectItem>
+                              <SelectItem value="grid">Grid</SelectItem>
+                              <SelectItem value="podium">Olympic Podium</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">Number of Players to Show (leave empty for all)</label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={slideContent.scoreboardLimit || ''}
+                            onChange={(e) => updateSlideContent(selectedSlide.id, { scoreboardLimit: e.target.value ? parseInt(e.target.value) : undefined })}
+                            placeholder="All players"
+                            className="bg-muted border-border"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Time & Points */}
+                {slideContent.template !== 'end-game' && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
@@ -538,16 +698,15 @@ export default function PackEditor() {
                       />
                     </div>
                     {selectedSlide.time_limit !== null && selectedSlide.time_limit > 0 && (
-                      <div className="flex items-center gap-3">
-                        <Slider
-                          value={[selectedSlide.time_limit]}
-                          onValueChange={([v]) => updateSlide(selectedSlide.id, { time_limit: v })}
-                          min={5}
-                          max={120}
-                          step={5}
-                          className="flex-1"
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={selectedSlide.time_limit}
+                          onChange={(e) => updateSlide(selectedSlide.id, { time_limit: parseInt(e.target.value) || 0 })}
+                          min={0}
+                          className="bg-muted border-border h-9"
                         />
-                        <span className="text-sm font-mono text-muted-foreground w-10 text-right">{selectedSlide.time_limit}s</span>
+                        <span className="text-xs text-muted-foreground shrink-0">seconds</span>
                       </div>
                     )}
                   </div>
@@ -562,22 +721,23 @@ export default function PackEditor() {
                       />
                     </div>
                     {selectedSlide.points_possible !== null && selectedSlide.points_possible > 0 && (
-                      <div className="flex items-center gap-3">
-                        <Slider
-                          value={[selectedSlide.points_possible]}
-                          onValueChange={([v]) => updateSlide(selectedSlide.id, { points_possible: v })}
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={selectedSlide.points_possible}
+                          onChange={(e) => updateSlide(selectedSlide.id, { points_possible: parseInt(e.target.value) || 0 })}
                           min={0}
-                          max={500}
-                          step={50}
-                          className="flex-1"
+                          className="bg-muted border-border h-9"
                         />
-                        <span className="text-sm font-mono text-muted-foreground w-10 text-right">{selectedSlide.points_possible}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">pts</span>
                       </div>
                     )}
                   </div>
                 </div>
+                )}
 
                 {/* Buzzer Settings */}
+                {slideContent.template !== 'end-game' && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
@@ -611,6 +771,7 @@ export default function PackEditor() {
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* Delete & Duplicate */}
                 <div className="pt-4 border-t border-border flex items-center gap-2">
@@ -630,6 +791,14 @@ export default function PackEditor() {
                   <span className="text-xs font-medium">Player Preview</span>
                 </div>
                 <MobilePreview slide={selectedSlide} content={slideContent} />
+                {slideContent.mediaUrl && (
+                  <div className="mt-6 w-full">
+                    <span className="text-[10px] font-bold text-muted-foreground block mb-2 px-1 uppercase tracking-wider">Media Preview</span>
+                    <div className="rounded-xl overflow-hidden border border-border bg-black/40 aspect-video flex items-center justify-center">
+                       <MediaPlayer url={slideContent.mediaUrl} className="w-full h-full" />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -790,6 +959,19 @@ function MobilePreview({ slide, content }: { slide: Slide; content: SlideContent
                   </div>
                 </div>
               )}
+
+              {content.template === 'end-game' && (
+                <div className="space-y-2 text-center">
+                  {content.body && <p className="text-[8px] text-muted-foreground line-clamp-2" dangerouslySetInnerHTML={{ __html: content.body }}></p>}
+                  {content.showScoreboard && (
+                    <div className="bg-muted rounded-lg p-2 border border-border">
+                      <Trophy className="w-6 h-6 text-neon-yellow mx-auto mb-1" />
+                      <p className="text-[7px] font-bold">SCOREBOARD</p>
+                      <p className="text-[6px] text-muted-foreground">{content.scoreboardSortBy === 'score' ? 'Top Scores' : 'Fastest Buzzers'}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -806,6 +988,7 @@ function MobilePreview({ slide, content }: { slide: Slide; content: SlideContent
       )}
 
       {/* Bottom bar */}
+      {content.template !== 'end-game' && (
       <div className="h-5 bg-card flex items-center justify-center gap-3">
         {slide.time_limit != null && slide.time_limit > 0 && (
           <div className="flex items-center gap-0.5 text-muted-foreground">
@@ -826,6 +1009,7 @@ function MobilePreview({ slide, content }: { slide: Slide; content: SlideContent
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

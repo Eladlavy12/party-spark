@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Edit3, Trash2, Copy, PackageOpen, ArrowLeft, Gamepad2 } from 'lucide-react';
+import { Plus, Edit3, Trash2, Copy, PackageOpen, ArrowLeft, Gamepad2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';

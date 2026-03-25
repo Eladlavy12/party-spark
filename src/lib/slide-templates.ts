@@ -1,4 +1,4 @@
-export type SlideTemplate = 'information' | 'open-text' | 'multiple-choice' | 'rating' | 'drawing';
+export type SlideTemplate = 'information' | 'open-text' | 'multiple-choice' | 'rating' | 'drawing' | 'end-game' | 'slider' | 'text-card';
 
 export interface SlideTemplateConfig {
   id: SlideTemplate;
@@ -15,6 +15,12 @@ export const SLIDE_TEMPLATES: SlideTemplateConfig[] = [
     icon: 'Info',
   },
   {
+    id: 'text-card',
+    label: 'Text Card',
+    description: 'Focused text slide with game elements (buzzer, points)',
+    icon: 'Type',
+  },
+  {
     id: 'open-text',
     label: 'Open Text',
     description: 'Show a prompt — players type a text answer',
@@ -27,9 +33,15 @@ export const SLIDE_TEMPLATES: SlideTemplateConfig[] = [
     icon: 'CheckSquare',
   },
   {
+    id: 'slider',
+    label: 'Slider',
+    description: 'Players pick a value on a numeric range',
+    icon: 'SlidersHorizontal',
+  },
+  {
     id: 'rating',
     label: 'Rating / Scale',
-    description: 'Show a statement — players use a slider or like/dislike',
+    description: 'Show a statement — players use a star rating (1-10)',
     icon: 'Star',
   },
   {
@@ -37,6 +49,12 @@ export const SLIDE_TEMPLATES: SlideTemplateConfig[] = [
     label: 'Drawing',
     description: 'Show a prompt — players draw on a canvas',
     icon: 'Pencil',
+  },
+  {
+    id: 'end-game',
+    label: 'End Game',
+    description: 'Show an end game screen with an optional scoreboard',
+    icon: 'Trophy',
   },
 ];
 
@@ -57,6 +75,15 @@ export interface SlideContent {
   buzzerEnabled?: boolean;
   buzzerMode?: 'first' | 'all';
   answerVisibility?: AnswerVisibility;
+  showScoreboard?: boolean;
+  scoreboardType?: 'list' | 'grid' | 'podium';
+  scoreboardLimit?: number;
+  scoreboardSortBy?: 'score' | 'fastest-buzzer';
+  // Template specific config
+  sliderMin?: number;
+  sliderMax?: number;
+  sliderStep?: number;
+  sliderLabel?: string;
 }
 
 /** Pack-level settings stored in content_packs.settings (jsonb) */
@@ -75,14 +102,24 @@ export function getDefaultContent(template: SlideTemplate): SlideContent {
   const base: SlideContent = { template, title: '' };
   switch (template) {
     case 'information':
-      return { ...base, body: '' };
+    case 'text-card':
     case 'open-text':
-      return { ...base, body: '' };
-    case 'multiple-choice':
-      return { ...base, options: ['', '', '', ''], correctOptionIndex: 0 };
     case 'rating':
-      return { ...base, body: '' };
     case 'drawing':
       return { ...base, body: '' };
+    case 'slider':
+      return { ...base, body: '', sliderMin: 0, sliderMax: 100, sliderStep: 1 };
+    case 'multiple-choice':
+      return { ...base, options: ['', '', '', ''], correctOptionIndex: 0 };
+    case 'end-game':
+      return { 
+        ...base, 
+        body: '', 
+        showScoreboard: true, 
+        scoreboardType: 'podium',
+        scoreboardSortBy: 'score' 
+      };
+    default:
+      return base;
   }
 }

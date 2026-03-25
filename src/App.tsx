@@ -9,6 +9,8 @@ import HostGame from "./pages/HostGame.tsx";
 import PlayerJoin from "./pages/PlayerJoin.tsx";
 import Studio from "./pages/Studio.tsx";
 import PackEditor from "./pages/PackEditor.tsx";
+import GameDisplay from "./pages/GameDisplay.tsx";
+import PackPreview from "./pages/PackPreview.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -23,9 +25,11 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/host/:code" element={<HostLobby />} />
           <Route path="/host/:code/game" element={<HostGame />} />
+          <Route path="/host/:code/display" element={<GameDisplay />} />
           <Route path="/play/:code" element={<PlayerJoin />} />
           <Route path="/studio" element={<Studio />} />
           <Route path="/studio/:packId" element={<PackEditor />} />
+          <Route path="/studio/:packId/preview" element={<PackPreview />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

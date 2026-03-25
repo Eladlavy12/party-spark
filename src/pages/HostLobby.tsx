@@ -4,7 +4,7 @@ import { useRoom, usePlayers } from '@/hooks/use-realtime';
 import { useBuzzes } from '@/hooks/use-buzzer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import { Users, Play, Gamepad2, Bell, Trash2, Package, ChevronDown, Check } from 'lucide-react';
+import { Users, Play, Gamepad2, Bell, Trash2, Package, ChevronDown, Check, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -37,7 +37,6 @@ const HostLobby = () => {
         .from('content_packs')
         .select('*')
         .eq('creator_id', hostUserId)
-        .eq('is_published', true)
         .order('updated_at', { ascending: false });
 
       if (data) setPacks(data);
@@ -109,6 +108,15 @@ const HostLobby = () => {
         <div className="flex items-center gap-2 text-muted-foreground">
           <Users className="w-5 h-5" />
           <span className="font-medium">{players.length} player{players.length !== 1 ? 's' : ''}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(`/host/${code}/display`, '_blank', 'width=1280,height=720')}
+            className="ml-4 text-muted-foreground gap-1.5"
+          >
+            <Monitor className="w-4 h-4" />
+            TV Screen
+          </Button>
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import { useRoom, usePlayers } from '@/hooks/use-realtime';
 import { useBuzzes } from '@/hooks/use-buzzer';
 import { useCountdown } from '@/hooks/use-countdown';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, Bell, Send, Star, Pencil, Info } from 'lucide-react';
+import { Gamepad2, Bell, Send, Star, Pencil, Info, Trophy, Type, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -12,6 +12,7 @@ import { CountdownTimer } from '@/components/CountdownTimer';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { SlideContent } from '@/lib/slide-templates';
+import { MediaPlayer } from '@/components/MediaPlayer';
 
 type Slide = Database['public']['Tables']['slides']['Row'];
 
@@ -27,8 +28,12 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
   const { buzzes, sendBuzz } = useBuzzes(room?.id ?? null, slideIndex);
 
   const [slides, setSlides] = useState<Slide[]>([]);
+  const currentSlide = slides[slideIndex] ?? null;
+  const content = currentSlide ? (currentSlide.content as unknown as SlideContent) : null;
+
   const [textAnswer, setTextAnswer] = useState('');
   const [ratingValue, setRatingValue] = useState([5]);
+  const [sliderValue, setSliderValue] = useState([50]);
   const [submitted, setSubmitted] = useState(false);
   const [buzzed, setBuzzed] = useState(false);
 
@@ -47,17 +52,16 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
   useEffect(() => {
     setTextAnswer('');
     setRatingValue([5]);
+    setSliderValue([content?.sliderMin ?? 0]);
     setSubmitted(false);
     setBuzzed(false);
-  }, [slideIndex]);
+  }, [slideIndex, content?.sliderMin]);
 
   // Check if already buzzed this slide
   useEffect(() => {
     if (buzzes.some((b) => b.player_id === playerId)) setBuzzed(true);
   }, [buzzes, playerId]);
 
-  const currentSlide = slides[slideIndex] ?? null;
-  const content = currentSlide ? (currentSlide.content as unknown as SlideContent) : null;
   const hasPoints = currentSlide?.points_possible != null && currentSlide.points_possible > 0;
 
   // Countdown
@@ -139,22 +143,49 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Title */}
                 <h3 className="text-xl font-bold text-foreground text-center">{content.title || 'Get Ready!'}</h3>
 
-                {/* Information template */}
-                {content.template === 'information' && (
+                {/* Media */}
+                {content.mediaUrl && (
+                  <div className="w-full rounded-xl overflow-hidden mb-4 border border-border shadow-sm bg-black/5">
+                    <MediaPlayer url={content.mediaUrl} className="w-full h-full max-h-[30vh]" />
+                  </div>
+                )}
+
+                {/* Information / Text Card template */}
+                {(content.template === 'information' || content.template === 'text-card') && (
                   <div className="text-center space-y-3">
-                    <Info className="w-12 h-12 text-primary mx-auto" />
-                    {content.body && <div className="text-muted-foreground prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
-                    <p className="text-sm text-muted-foreground">Look at the host screen!</p>
+                    {content.template === 'information' ? <Info className="w-12 h-12 text-primary mx-auto" /> : <Type className="w-12 h-12 text-primary mx-auto" />}
+                    {content.body && <div className="text-muted-foreground prose prose-sm dark:prose-invert" dir="auto" dangerouslySetInnerHTML={{ __html: content.body }} />}
+                    {content.template === 'information' ? (
+                      <p className="text-sm text-muted-foreground">Look at the host screen!</p>
+                    ) : (
+                      <Button
+                        variant="hero"
+                        size="lg"
+                        className="w-full rounded-xl mt-4"
+                        onClick={() => handleSubmit({ status: 'done' })}
+                      >
+                        <Send className="w-4 h-4 mr-2" /> Done
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {/* End Game */}
+                {content.template === 'end-game' && (
+                  <div className="text-center space-y-4 py-8">
+                    <Trophy className="w-16 h-16 text-yellow-400 mx-auto" />
+                    {content.body && <div className="text-muted-foreground text-center text-lg prose prose-sm dark:prose-invert" dir="auto" dangerouslySetInnerHTML={{ __html: content.body }} />}
+                    <h3 className="text-2xl font-bold text-foreground">That's a wrap!</h3>
+                    <p className="text-muted-foreground">Check the main screen to see the final results!</p>
                   </div>
                 )}
 
                 {/* Open text */}
                 {content.template === 'open-text' && (
                   <div className="space-y-3">
-                    {content.body && <div className="text-muted-foreground text-center text-sm prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
+                    {content.body && <div className="text-muted-foreground text-center text-sm prose prose-sm dark:prose-invert" dir="auto" dangerouslySetInnerHTML={{ __html: content.body }} />}
                     <Input
                       placeholder="Type your answer…"
                       value={textAnswer}
@@ -192,28 +223,29 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
                   </div>
                 )}
 
-                {/* Rating */}
-                {content.template === 'rating' && (
-                  <div className="space-y-4">
-                    {content.body && <div className="text-muted-foreground text-center text-sm prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
-                    <div className="flex justify-center gap-1">
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                        <Star
-                          key={n}
-                          className={`w-7 h-7 cursor-pointer transition-colors ${
-                            n <= ratingValue[0] ? 'text-accent fill-accent' : 'text-muted-foreground'
-                          }`}
-                          onClick={() => setRatingValue([n])}
-                        />
-                      ))}
+                {/* Slider */}
+                {content.template === 'slider' && (
+                  <div className="space-y-6">
+                    {content.body && <div className="text-muted-foreground text-center text-sm prose prose-sm dark:prose-invert" dir="auto" dangerouslySetInnerHTML={{ __html: content.body }} />}
+                    <div className="p-8 bg-muted/50 rounded-2xl border border-border">
+                       <p className="text-center text-4xl font-black text-primary mb-6">{sliderValue[0]}</p>
+                       <Slider 
+                         value={sliderValue} 
+                         onValueChange={setSliderValue} 
+                         min={content.sliderMin ?? 0} 
+                         max={content.sliderMax ?? 100} 
+                         step={content.sliderStep ?? 1} 
+                       />
+                       <div className="flex justify-between mt-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          <span>{content.sliderMin ?? 0}</span>
+                          <span>{content.sliderMax ?? 100}</span>
+                       </div>
                     </div>
-                    <p className="text-center text-2xl font-bold text-foreground">{ratingValue[0]}/10</p>
-                    <Slider value={ratingValue} onValueChange={setRatingValue} min={1} max={10} step={1} />
                     <Button
                       variant="hero"
                       size="lg"
                       className="w-full rounded-xl"
-                      onClick={() => handleSubmit({ rating: ratingValue[0] })}
+                      onClick={() => handleSubmit({ sliderValue: sliderValue[0] })}
                     >
                       <Send className="w-4 h-4 mr-2" /> Submit
                     </Button>
@@ -223,7 +255,7 @@ const PlayerGame = ({ playerId, playerName }: PlayerGameProps) => {
                 {/* Drawing */}
                 {content.template === 'drawing' && (
                   <div className="space-y-3 text-center">
-                    {content.body && <div className="text-muted-foreground text-sm prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: content.body }} />}
+                    {content.body && <div className="text-muted-foreground text-sm prose prose-sm dark:prose-invert" dir="auto" dangerouslySetInnerHTML={{ __html: content.body }} />}
                     <div className="bg-muted rounded-2xl aspect-square w-full border border-dashed border-border flex items-center justify-center">
                       <Pencil className="w-10 h-10 text-muted-foreground/30" />
                     </div>
