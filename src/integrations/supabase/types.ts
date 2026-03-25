@@ -61,7 +61,9 @@ export type Database = {
           game_type: Database["public"]["Enums"]["game_type"]
           id: string
           is_published: boolean | null
+          max_currency: number | null
           settings: Json | null
+          starting_currency: number | null
           title: string
           updated_at: string
         }
@@ -72,7 +74,9 @@ export type Database = {
           game_type: Database["public"]["Enums"]["game_type"]
           id?: string
           is_published?: boolean | null
+          max_currency?: number | null
           settings?: Json | null
+          starting_currency?: number | null
           title: string
           updated_at?: string
         }
@@ -83,7 +87,9 @@ export type Database = {
           game_type?: Database["public"]["Enums"]["game_type"]
           id?: string
           is_published?: boolean | null
+          max_currency?: number | null
           settings?: Json | null
+          starting_currency?: number | null
           title?: string
           updated_at?: string
         }
@@ -92,7 +98,10 @@ export type Database = {
       players: {
         Row: {
           avatar_color: string | null
+          avatar_id: string | null
           created_at: string
+          hero_bucks: number | null
+          hits: number | null
           id: string
           is_ready: boolean | null
           last_seen: string | null
@@ -102,7 +111,10 @@ export type Database = {
         }
         Insert: {
           avatar_color?: string | null
+          avatar_id?: string | null
           created_at?: string
+          hero_bucks?: number | null
+          hits?: number | null
           id?: string
           is_ready?: boolean | null
           last_seen?: string | null
@@ -112,7 +124,10 @@ export type Database = {
         }
         Update: {
           avatar_color?: string | null
+          avatar_id?: string | null
           created_at?: string
+          hero_bucks?: number | null
+          hits?: number | null
           id?: string
           is_ready?: boolean | null
           last_seen?: string | null
@@ -281,6 +296,7 @@ export type Database = {
         | "drawing"
         | "truth-or-dare"
         | "improvisation"
+        | "super-heroes"
       room_status: "lobby" | "playing" | "ended"
     }
     CompositeTypes: {
@@ -415,6 +431,7 @@ export const Constants = {
         "drawing",
         "truth-or-dare",
         "improvisation",
+        "super-heroes",
       ],
       room_status: ["lobby", "playing", "ended"],
     },
