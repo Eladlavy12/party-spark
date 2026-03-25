@@ -26,9 +26,8 @@ export function MediaPlayer({ url, className = '' }: { url: string; className?: 
   if (isPlayable && !isImageMatch) {
     return (
       <div className={`overflow-hidden ${className}`} style={{ aspectRatio: '16/9', width: '100%' }}>
-        {/* @ts-ignore: ReactPlayer props type issue in this environment */}
         <ReactPlayer 
-          url={cleanUrl} 
+          {...{ url: cleanUrl } as any}
           controls 
           width="100%" 
           height="100%" 
