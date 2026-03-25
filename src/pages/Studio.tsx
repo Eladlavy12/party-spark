@@ -43,6 +43,7 @@ const GAME_TYPE_LABELS: Record<GameType, string> = {
   drawing: '🎨 Drawing',
   'truth-or-dare': '🔥 Truth or Dare',
   improvisation: '🎭 Improvisation',
+  'super-heroes': '🦸 Super Heroes',
 };
 
 const GAME_TYPE_COLORS: Record<GameType, string> = {
@@ -51,6 +52,7 @@ const GAME_TYPE_COLORS: Record<GameType, string> = {
   drawing: 'bg-neon-yellow/20 text-neon-yellow',
   'truth-or-dare': 'bg-neon-pink/20 text-neon-pink',
   improvisation: 'bg-neon-orange/20 text-neon-orange',
+  'super-heroes': 'bg-neon-blue/20 text-neon-blue',
 };
 
 export default function Studio() {
